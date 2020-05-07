@@ -1,37 +1,51 @@
-locals {
-  tmp_dir      = "${path.cwd}/.tmp"
-  chart_name   = "argo-cd"
-  enable_cache = var.enable_cache
-  ingress_host = "argocd"
-  ingress_subdomain = var.cluster_ingress_hostname
-  ingress_url  = "http://${local.ingress_host}"
-  config_name  = "argocd-config"
-  secret_name  = "argocd-access"
+provider "helm" {
+  version = ">= 1.1.1"
+
+  kubernetes {
+    config_path = var.cluster_config_file
+  }
 }
 
-resource "null_resource" "argocd_release" {
-  triggers = {
-    kubeconfig_iks     = var.cluster_config_file
-    releases_namespace = var.releases_namespace
-  }
+locals {
+  tmp_dir       = "${path.cwd}/.tmp"
+  host          = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
+  url_endpoint  = "https://${local.host}"
+}
 
+resource "null_resource" "argocd-subscription" {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-argocd.sh ${local.chart_name} ${self.triggers.releases_namespace} ${var.helm_version} ${local.ingress_host} ${local.ingress_subdomain} ${local.enable_cache} ${var.route_type}"
+    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${var.app_namespace} ${var.olm_namespace}"
 
     environment = {
-      KUBECONFIG  = self.triggers.kubeconfig_iks
-      CLUSTER_TYPE    = var.cluster_type
-      TLS_SECRET_NAME = var.tls_secret_name
-      TMP_DIR         = local.tmp_dir
+      TMP_DIR    = local.tmp_dir
+      KUBECONFIG = var.cluster_config_file
     }
   }
+}
+
+resource "null_resource" "argocd-instance" {
+  depends_on = [null_resource.argocd-subscription]
 
   provisioner "local-exec" {
-    when    = destroy
-    command = "${path.module}/scripts/destroy-argocd.sh ${self.triggers.releases_namespace}"
+    command = "${path.module}/scripts/deploy-instance.sh ${var.cluster_type} ${var.app_namespace} ${var.ingress_subdomain} ${var.name}"
 
     environment = {
-      KUBECONFIG = self.triggers.kubeconfig_iks
+      KUBECONFIG = var.cluster_config_file
     }
+  }
+}
+
+resource "helm_release" "argocd-config" {
+  depends_on = [null_resource.argocd-instance]
+
+  name         = "argocd"
+  repository   = "https://ibm-garage-cloud.github.io/toolkit-charts/"
+  chart        = "tool-config"
+  namespace    = var.app_namespace
+  force_update = true
+
+  set {
+    name  = "url"
+    value = local.url_endpoint
   }
 }
