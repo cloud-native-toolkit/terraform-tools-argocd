@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 URL="$1"
 WAIT_TIME=$2
 WAIT_COUNT=$3
