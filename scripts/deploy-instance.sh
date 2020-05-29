@@ -18,6 +18,10 @@ if [[ -z "${TMP_DIR}" ]]; then
 fi
 mkdir -p "${TMP_DIR}"
 
+if [[ -z ${PASSWORD_FILE} ]]; then
+  PASSWORD_FILE="/dev/stdout"
+fi
+
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
   HOST="${NAME}-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
   ROUTE="false"
@@ -86,3 +90,5 @@ until kubectl get deployment/${DEPLOYMENT} -n ${NAMESPACE} 1> /dev/null 2> /dev/
 done
 
 kubectl rollout status deployment/${DEPLOYMENT} -n "${NAMESPACE}"
+
+kubectl get secret argocd-cluster -n "${NAMESPACE}" -o jsonpath='{.data.admin\.password}' | base64 -d > "${PASSWORD_FILE}"

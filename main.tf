@@ -10,6 +10,7 @@ locals {
   tmp_dir       = "${path.cwd}/.tmp"
   host          = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
   url_endpoint  = "https://${local.host}"
+  password_file = "${local.tmp_dir}/argocd-password.val"
 }
 
 resource "null_resource" "argocd-subscription" {
@@ -30,9 +31,16 @@ resource "null_resource" "argocd-instance" {
     command = "${path.module}/scripts/deploy-instance.sh ${var.cluster_type} ${var.app_namespace} ${var.ingress_subdomain} ${var.name}"
 
     environment = {
-      KUBECONFIG = var.cluster_config_file
+      KUBECONFIG    = var.cluster_config_file
+      PASSWORD_FILE = local.password_file
     }
   }
+}
+
+data "local_file" "argocd-password" {
+  depends_on = [null_resource.argocd-instance]
+
+  filename = local.password_file
 }
 
 resource "helm_release" "argocd-config" {
@@ -47,5 +55,20 @@ resource "helm_release" "argocd-config" {
   set {
     name  = "url"
     value = local.url_endpoint
+  }
+
+  set {
+    name  = "username"
+    value = var.cluster_type == "kubernetes" ? "admin" : ""
+  }
+
+  set_sensitive {
+    name  = "password"
+    value = var.cluster_type == "kubernetes" ? data.local_file.argocd-password.content : ""
+  }
+
+  set {
+    name  = "applicationMenu"
+    value = var.cluster_type != "kubernetes"
   }
 }
