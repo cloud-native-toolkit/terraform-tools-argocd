@@ -7,19 +7,35 @@ provider "helm" {
 }
 
 locals {
-  tmp_dir       = "${path.cwd}/.tmp"
-  host          = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
-  url_endpoint  = "https://${local.host}"
-  password_file = "${local.tmp_dir}/argocd-password.val"
+  tmp_dir         = "${path.cwd}/.tmp"
+  host            = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
+  url_endpoint    = "https://${local.host}"
+  password_file   = "${local.tmp_dir}/argocd-password.val"
+  tls_secret_name = regex("([^.]+).*", var.ingress_subdomain)[0]
 }
 
 resource "null_resource" "argocd-subscription" {
+  triggers = {
+    kubeconfig = var.cluster_config_file
+    namespace  = var.app_namespace
+  }
+
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${var.app_namespace} ${var.olm_namespace}"
+    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace}"
 
     environment = {
       TMP_DIR    = local.tmp_dir
-      KUBECONFIG = var.cluster_config_file
+      KUBECONFIG = self.triggers.kubeconfig
+    }
+  }
+
+  provisioner "local-exec" {
+    when = destroy
+
+    command = "${path.module}/scripts/destroy-subscription.sh ${self.triggers.namespace}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
     }
   }
 }
@@ -27,12 +43,28 @@ resource "null_resource" "argocd-subscription" {
 resource "null_resource" "argocd-instance" {
   depends_on = [null_resource.argocd-subscription]
 
+  triggers = {
+    kubeconfig = var.cluster_config_file
+    namespace  = var.app_namespace
+    name       = var.name
+  }
+
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-instance.sh ${var.cluster_type} ${var.app_namespace} ${var.ingress_subdomain} ${var.name}"
+    command = "${path.module}/scripts/deploy-instance.sh ${var.cluster_type} ${self.triggers.namespace} ${var.ingress_subdomain} ${self.triggers.name}"
 
     environment = {
-      KUBECONFIG    = var.cluster_config_file
+      KUBECONFIG    = self.triggers.kubeconfig
       PASSWORD_FILE = local.password_file
+    }
+  }
+
+  provisioner "local-exec" {
+    when = destroy
+
+    command = "${path.module}/scripts/destroy-instance.sh ${self.triggers.namespace} ${self.triggers.name}"
+
+    environment = {
+      KUBECONFIG    = self.triggers.kubeconfig
     }
   }
 }
@@ -70,5 +102,37 @@ resource "helm_release" "argocd-config" {
   set {
     name  = "applicationMenu"
     value = var.cluster_type != "kubernetes"
+  }
+}
+
+
+resource "helm_release" "solsa" {
+  depends_on = [null_resource.argocd-instance]
+
+  name         = "solsa"
+  chart        = "${path.module}/charts/solsa-cm"
+  namespace    = var.app_namespace
+  force_update = true
+
+  set {
+    name  = "ingress.subdomain"
+    value = var.ingress_subdomain
+  }
+
+  set {
+    name  = "ingress.tlssecret"
+    value = local.tls_secret_name
+  }
+}
+
+resource "null_resource" "patch-solsa" {
+  depends_on = [helm_release.solsa]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/patch-solsa.sh ${var.app_namespace}"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
   }
 }
