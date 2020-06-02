@@ -7,11 +7,13 @@ provider "helm" {
 }
 
 locals {
-  tmp_dir         = "${path.cwd}/.tmp"
-  host            = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
-  url_endpoint    = "https://${local.host}"
-  password_file   = "${local.tmp_dir}/argocd-password.val"
-  tls_secret_name = regex("([^.]+).*", var.ingress_subdomain)[0]
+  tmp_dir           = "${path.cwd}/.tmp"
+  host              = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
+  grpc_host         = "${var.name}-server-grpc-${var.app_namespace}.${var.ingress_subdomain}"
+  url_endpoint      = "https://${local.host}"
+  grpc_url_endpoint = "https://${local.grpc_host}"
+  password_file     = "${local.tmp_dir}/argocd-password.val"
+  tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
 }
 
 resource "null_resource" "argocd-subscription" {
@@ -87,6 +89,11 @@ resource "helm_release" "argocd-config" {
   set {
     name  = "url"
     value = local.url_endpoint
+  }
+
+  set {
+    name  = "otherConfig.grpc_url"
+    value = local.grpc_url_endpoint
   }
 
   set {
