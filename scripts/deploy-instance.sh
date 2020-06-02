@@ -94,7 +94,7 @@ kubectl rollout status deployment/${DEPLOYMENT} -n "${NAMESPACE}"
 
 # For now, patch the ingress. Eventually the operator will handle this correctly
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
-  INGRESS_NAME=$(kubectl get ingress -n "${NAMESPACE}" --o=custom-columns=name:.metadata.name | grep -E "^argocd$")
+  INGRESS_NAME=$(kubectl get ingress -n "${NAMESPACE}" -o=custom-columns=name:.metadata.name | grep -E "^argocd" | grep -vE "argocd.*grpc")
   kubectl patch ingress -n "${NAMESPACE}" "${INGRESS_NAME}" --type json \
     -p="[{\"op\": \"replace\", \"path\": \"/spec/tls/0/hosts/0\", value: \"${HOST}\"}, {\"op\": \"replace\", \"path\": \"/spec/tls/0/secretName\", \"value\": \"${TLS_SECRET_NAME}\"}]"
 fi
