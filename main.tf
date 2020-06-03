@@ -77,14 +77,31 @@ data "local_file" "argocd-password" {
   filename = local.password_file
 }
 
+resource "null_resource" "delete-consolelink" {
+  count = var.cluster_type != "kubernetes" ? 1 : 0
+
+  provisioner "local-exec" {
+    command = "kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource "helm_release" "argocd-config" {
-  depends_on = [null_resource.argocd-instance]
+  depends_on = [null_resource.argocd-instance, null_resource.delete-consolelink]
 
   name         = "argocd"
   repository   = "https://ibm-garage-cloud.github.io/toolkit-charts/"
   chart        = "tool-config"
   namespace    = var.app_namespace
   force_update = true
+
+  set {
+    name  = "name"
+    value = "ArgoCD"
+  }
 
   set {
     name  = "url"
@@ -110,8 +127,12 @@ resource "helm_release" "argocd-config" {
     name  = "applicationMenu"
     value = var.cluster_type != "kubernetes"
   }
-}
 
+  set {
+    name  = "ingressSubdomain"
+    value = var.ingress_subdomain
+  }
+}
 
 resource "helm_release" "solsa" {
   depends_on = [null_resource.argocd-instance]
