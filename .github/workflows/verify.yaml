@@ -31,17 +31,17 @@ jobs:
       # Setups up the task
       - name: Setup ${{ matrix.platform }}
         run: |
-          mkdir -p workspace/${{ matrix.platform }}
-          cp -R test/setup/environments/${{ matrix.platform }}/* workspace/${{ matrix.platform }}
-          cp -R test/setup/stages/* workspace/${{ matrix.platform }}
-          cp -R test/setup/scripts/* workspace/${{ matrix.platform }}
+          mkdir -p /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/environments/${{ matrix.platform }}/* /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
         env:
           PLATFORM: ${{ matrix.platform }}
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
         run: |
-          cd workspace/${PLATFORM}
+          cd /tmp/workspace/${{ matrix.platform }}
           ./apply.sh
         env:
           PLATFORM: ${{ matrix.platform }}
@@ -51,7 +51,7 @@ jobs:
       # Test deploy
       - name: Validate deploy ${{ matrix.platform }}
         run: |
-          cd workspace/${PLATFORM}
+          cd /tmp/workspace/${{ matrix.platform }}
           ./validate-deploy.sh
         env:
           PLATFORM: ${{ matrix.platform }}
@@ -61,7 +61,7 @@ jobs:
       # Destroy
       - name: Destroy ${{ matrix.platform }}
         run: |
-          cd workspace/${PLATFORM}
+          cd /tmp/workspace/${{ matrix.platform }}
           ./destroy.sh
         env:
           PLATFORM: ${{ matrix.platform }}
@@ -71,7 +71,7 @@ jobs:
       # Test destroy
       - name: Validate destroy ${{ matrix.platform }}
         run: |
-          cd workspace/${PLATFORM}
+          cd /tmp/workspace/${{ matrix.platform }}
           ./validate-destroy.sh
         env:
           PLATFORM: ${{ matrix.platform }}
