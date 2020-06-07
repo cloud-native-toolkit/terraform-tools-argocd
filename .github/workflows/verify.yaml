@@ -43,8 +43,8 @@ jobs:
           ./apply.sh
         env:
           HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
-          IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
 
       # Test deploy
       - name: Validate deploy ${{ matrix.platform }}
@@ -53,8 +53,8 @@ jobs:
           ./validate-deploy.sh
         env:
           HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
-          IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
 
       # Destroy
       - name: Destroy ${{ matrix.platform }}
@@ -63,8 +63,8 @@ jobs:
           ./destroy.sh
         env:
           HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
-          IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
 
       # Test destroy
       - name: Validate destroy ${{ matrix.platform }}
@@ -73,5 +73,5 @@ jobs:
           ./validate-destroy.sh
         env:
           HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
-          IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
