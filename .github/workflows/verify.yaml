@@ -29,45 +29,51 @@ jobs:
         uses: actions/checkout@v1
 
       # Setups up the task
-      - name: Setup ${matrix.platform}
+      - name: Setup ${{ matrix.platform }}
         run: |
-          mkdir -p workspace/${matrix.platform}
-          cp -R test/setup/environments/${matrix.platform}/* workspace/${matrix.platform}
-          cp -R test/setup/stages/* workspace/${matrix.platform}
-          cp -R test/setup/scripts/* workspace/${matrix.platform}
+          mkdir -p workspace/${PLATFORM}
+          cp -R test/setup/environments/${PLATFORM}/* workspace/${PLATFORM}
+          cp -R test/setup/stages/* workspace/${PLATFORM}
+          cp -R test/setup/scripts/* workspace/${PLATFORM}
+        env:
+          PLATFORM: ${{ matrix.platform }}
 
       # Deploy
-      - name: Deploy ${matrix.platform}
+      - name: Deploy ${{ matrix.platform }}
         run: |
-          cd workspace/${matrix.platform}
+          cd workspace/${PLATFORM}
           ./apply.sh
         env:
+          PLATFORM: ${{ matrix.platform }}
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
       # Test deploy
-      - name: Validate deploy ${matrix.platform}
+      - name: Validate deploy ${{ matrix.platform }}
         run: |
-          cd workspace/${matrix.platform}
+          cd workspace/${PLATFORM}
           ./validate-deploy.sh
         env:
+          PLATFORM: ${{ matrix.platform }}
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
       # Destroy
-      - name: Destroy ${matrix.platform}
+      - name: Destroy ${{ matrix.platform }}
         run: |
-          cd workspace/${matrix.platform}
+          cd workspace/${PLATFORM}
           ./destroy.sh
         env:
+          PLATFORM: ${{ matrix.platform }}
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
       # Test destroy
-      - name: Validate destroy ${matrix.platform}
+      - name: Validate destroy ${{ matrix.platform }}
         run: |
-          cd workspace/${matrix.platform}
+          cd workspace/${PLATFORM}
           ./validate-destroy.sh
         env:
+          PLATFORM: ${{ matrix.platform }}
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
