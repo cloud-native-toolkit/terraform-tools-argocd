@@ -1,0 +1,103 @@
+name: Verify and release module
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  verify:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container: ibmgaragecloud/cli-tools:0.3.0-lite
+    timeout-minutes: 120
+
+    strategy:
+      matrix:
+        platform: [iks, ocp3, ocp4]
+#      max-parallel: 1
+#      fail-fast: false
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      # Setups up the task
+      - name: Setup ${{ matrix.platform }}
+        run: |
+          mkdir -p /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/environments/${{ matrix.platform }}/* /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/resources.yaml /tmp/workspace/${{ matrix.platform }}
+
+      # Deploy
+      - name: Deploy ${{ matrix.platform }}
+        run: |
+          cd /tmp/workspace/${{ matrix.platform }}
+          ./apply.sh
+        env:
+          HOME: /home/devops
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
+          TF_VAR_region: ${{ secrets.TEST_REGION }}
+          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+
+      # Test deploy
+      - name: Validate deploy ${{ matrix.platform }}
+        run: |
+          cd /tmp/workspace/${{ matrix.platform }}
+          ./validate-deploy.sh ${{ matrix.platform }}
+        env:
+          HOME: /home/devops
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
+          TF_VAR_region: ${{ secrets.TEST_REGION }}
+          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+
+      # Destroy
+      - name: Destroy ${{ matrix.platform }}
+        run: |
+          cd /tmp/workspace/${{ matrix.platform }}
+          ./destroy.sh
+        env:
+          HOME: /home/devops
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
+          TF_VAR_region: ${{ secrets.TEST_REGION }}
+          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+
+      # Test destroy
+      - name: Validate destroy ${{ matrix.platform }}
+        run: |
+          cd /tmp/workspace/${{ matrix.platform }}
+          ./validate-destroy.sh ${{ matrix.platform }}
+        env:
+          HOME: /home/devops
+          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
+          TF_VAR_region: ${{ secrets.TEST_REGION }}
+          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+
+  release:
+    if: ${{ github.ref == 'master' && github.event_name == 'push }}
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - uses: release-drafter/release-drafter@v5
+        with:
+        # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yaml
+          config-name: release-drafter.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
