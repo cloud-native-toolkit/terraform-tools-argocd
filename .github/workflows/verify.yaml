@@ -35,8 +35,6 @@ jobs:
           cp -R ./test/setup/environments/${{ matrix.platform }}/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
-        env:
-          PLATFORM: ${{ matrix.platform }}
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
@@ -44,7 +42,7 @@ jobs:
           cd /tmp/workspace/${{ matrix.platform }}
           ./apply.sh
         env:
-          PLATFORM: ${{ matrix.platform }}
+          HOME: /home/devops
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
@@ -54,7 +52,7 @@ jobs:
           cd /tmp/workspace/${{ matrix.platform }}
           ./validate-deploy.sh
         env:
-          PLATFORM: ${{ matrix.platform }}
+          HOME: /home/devops
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
@@ -64,7 +62,7 @@ jobs:
           cd /tmp/workspace/${{ matrix.platform }}
           ./destroy.sh
         env:
-          PLATFORM: ${{ matrix.platform }}
+          HOME: /home/devops
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
 
@@ -74,6 +72,6 @@ jobs:
           cd /tmp/workspace/${{ matrix.platform }}
           ./validate-destroy.sh
         env:
-          PLATFORM: ${{ matrix.platform }}
+          HOME: /home/devops
           TF_VAR_ibmcloud_api_key: $IBMCLOUD_API_KEY
           IBMCLOUD_API_KEY: $IBMCLOUD_API_KEY
