@@ -31,10 +31,10 @@ jobs:
       # Setups up the task
       - name: Setup ${{ matrix.platform }}
         run: |
-          mkdir -p workspace/$PLATFORM
-          cp -R test/setup/environments/$PLATFORM/* workspace/$PLATFORM
-          cp -R test/setup/stages/* workspace/$PLATFORM
-          cp -R test/setup/scripts/* workspace/$PLATFORM
+          mkdir -p workspace/${{ matrix.platform }}
+          cp -R test/setup/environments/${{ matrix.platform }}/* workspace/${{ matrix.platform }}
+          cp -R test/setup/stages/* workspace/${{ matrix.platform }}
+          cp -R test/setup/scripts/* workspace/${{ matrix.platform }}
         env:
           PLATFORM: ${{ matrix.platform }}
 
