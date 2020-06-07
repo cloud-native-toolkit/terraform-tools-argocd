@@ -16,7 +16,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: ibmcloudgarage/cli-tools:lite
+    container: ibmgaragecloud/cli-tools:lite
 
     strategy:
       matrix:
