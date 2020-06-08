@@ -12,6 +12,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  timeout-minutes: 120
+
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
@@ -38,7 +40,6 @@ jobs:
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
-        timeout-minutes: 30
         run: |
           cd /tmp/workspace/${{ matrix.platform }}
           ./apply.sh
