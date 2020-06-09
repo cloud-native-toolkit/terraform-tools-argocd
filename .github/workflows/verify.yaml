@@ -90,7 +90,7 @@ jobs:
           TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
 
   release:
-    if: ${{ github.ref == 'master' && github.event_name == 'push }}
+    if: ${{ github.ref == 'master' && github.event_name == 'push' }}
     needs: verify
     runs-on: ubuntu-latest
     steps:
