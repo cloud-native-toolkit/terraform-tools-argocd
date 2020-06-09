@@ -18,7 +18,6 @@ variable "region" {
 variable "tools_namespace" {
   type        = string
   description = "Namespace for tools"
-  default     = "tools-argocd"
 }
 
 variable "cluster_name" {
@@ -35,7 +34,7 @@ variable "cluster_type" {
 variable "cluster_exists" {
   type        = string
   description = "Flag indicating if the cluster already exists (true or false)"
-  default     = "false"
+  default     = "true"
 }
 
 variable "name_prefix" {

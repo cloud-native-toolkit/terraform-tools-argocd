@@ -32,10 +32,10 @@ jobs:
       - name: Setup ${{ matrix.platform }}
         run: |
           mkdir -p /tmp/workspace/${{ matrix.platform }}
-          cp -R ./test/setup/environments/${{ matrix.platform }}/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/resources.yaml /tmp/workspace/${{ matrix.platform }}
+          cp -R ./test/terraform.tfvars /tmp/workspace/${{ matrix.platform }}
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
@@ -49,6 +49,7 @@ jobs:
           TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
           TF_VAR_region: ${{ secrets.TEST_REGION }}
           TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+          TF_VAR_cluster_type: ${{ matrix.platform }}
 
       # Test deploy
       - name: Validate deploy ${{ matrix.platform }}
@@ -62,6 +63,7 @@ jobs:
           TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
           TF_VAR_region: ${{ secrets.TEST_REGION }}
           TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+          TF_VAR_cluster_type: ${{ matrix.platform }}
 
       # Destroy
       - name: Destroy ${{ matrix.platform }}
@@ -75,6 +77,7 @@ jobs:
           TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
           TF_VAR_region: ${{ secrets.TEST_REGION }}
           TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+          TF_VAR_cluster_type: ${{ matrix.platform }}
 
       # Test destroy
       - name: Validate destroy ${{ matrix.platform }}
@@ -88,6 +91,7 @@ jobs:
           TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
           TF_VAR_region: ${{ secrets.TEST_REGION }}
           TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+          TF_VAR_cluster_type: ${{ matrix.platform }}
 
   release:
     if: ${{ github.ref == 'master' && github.event_name == 'push' }}
