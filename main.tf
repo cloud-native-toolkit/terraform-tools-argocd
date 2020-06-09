@@ -23,7 +23,7 @@ resource "null_resource" "argocd-subscription" {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace}"
+    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace} ${var.operator_version}"
 
     environment = {
       TMP_DIR    = local.tmp_dir

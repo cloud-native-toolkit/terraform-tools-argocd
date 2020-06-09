@@ -3,6 +3,7 @@
 CLUSTER_TYPE="$1"
 OPERATOR_NAMESPACE="$2"
 OLM_NAMESPACE="$3"
+OPERATOR_VERSION="$4"
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR=".tmp"
@@ -21,6 +22,10 @@ if [[ -z "${OLM_NAMESPACE}" ]]; then
   else
     OLM_NAMESPACE="olm"
   fi
+fi
+
+if [[ -z "${OPERATOR_VERSION}" ]]; then
+  OPERATOR_VERSION="v0.0.9"
 fi
 
 YAML_FILE=${TMP_DIR}/argocd-subscription.yaml

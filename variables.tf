@@ -34,3 +34,9 @@ variable "name" {
   description = "The name for the instance"
   default     = "argocd"
 }
+
+variable "operator_version" {
+  type        = string
+  description = "The starting version of the CSV"
+  default     = "v0.0.9"
+}
