@@ -14,7 +14,6 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     container: ibmgaragecloud/cli-tools:0.3.0-lite
-    timeout-minutes: 120
 
     strategy:
       matrix:
@@ -22,86 +21,100 @@ jobs:
 #      max-parallel: 1
 #      fail-fast: false
 
+    env:
+      HOME: /home/devops
+      NAMESPACE: ${{ secrets.NAMESPACE }}
+      TF_VAR_tools_namespace: ${{ secrets.NAMESPACE }}
+      TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
+      IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+      TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
+      TF_VAR_region: ${{ secrets.TEST_REGION }}
+      TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
+      TF_VAR_cluster_type: ${{ matrix.platform }}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Validate config
+        run: |
+          if [ -z "${NAMESPACE}" ]; then
+            echo "The NAMESPACE secret has not been set within the Git repo"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v1
 
       # Setups up the task
       - name: Setup ${{ matrix.platform }}
         run: |
+          ls -lA
           mkdir -p /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
           cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
-          cp -R ./test/resources.yaml /tmp/workspace/${{ matrix.platform }}
-          cp -R ./test/terraform.tfvars /tmp/workspace/${{ matrix.platform }}
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
         run: |
           cd /tmp/workspace/${{ matrix.platform }}
           ./apply.sh
-        env:
-          HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
-          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
-          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
-          TF_VAR_region: ${{ secrets.TEST_REGION }}
-          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
-          TF_VAR_cluster_type: ${{ matrix.platform }}
 
       # Test deploy
       - name: Validate deploy ${{ matrix.platform }}
         run: |
           cd /tmp/workspace/${{ matrix.platform }}
-          ./validate-deploy.sh ${{ matrix.platform }}
-        env:
-          HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
-          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
-          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
-          TF_VAR_region: ${{ secrets.TEST_REGION }}
-          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
-          TF_VAR_cluster_type: ${{ matrix.platform }}
+          ./validate-deploy.sh ${{ matrix.platform }} ${{ env.TF_VAR_tools_namespace }}
 
       # Destroy
       - name: Destroy ${{ matrix.platform }}
         run: |
           cd /tmp/workspace/${{ matrix.platform }}
           ./destroy.sh
-        env:
-          HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
-          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
-          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
-          TF_VAR_region: ${{ secrets.TEST_REGION }}
-          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
-          TF_VAR_cluster_type: ${{ matrix.platform }}
 
       # Test destroy
       - name: Validate destroy ${{ matrix.platform }}
         run: |
           cd /tmp/workspace/${{ matrix.platform }}
-          ./validate-destroy.sh ${{ matrix.platform }}
-        env:
-          HOME: /home/devops
-          TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
-          IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
-          TF_VAR_resource_group_name: ${{ secrets.TEST_RESOURCE_GROUP }}
-          TF_VAR_region: ${{ secrets.TEST_REGION }}
-          TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
-          TF_VAR_cluster_type: ${{ matrix.platform }}
+          ./capture-cluster-state.sh ${{ matrix.platform }} ${{ env.NAMESPACE }} $PWD/cluster-state/after/${{ env.NAMESPACE }}.out
+          if diff -q $PWD/cluster-state/before $PWD/cluster-state/after 1> /dev/null; then
+            echo "Destroy completed successfully"
+          else
+            echo "Resources don't match"
+            diff $PWD/cluster-state/before $PWD/cluster-state/after
+            exit 1
+          fi
 
   release:
-    if: ${{ github.ref == 'master' && github.event_name == 'push' }}
+#    if: ${{ github.event_name == 'push' }}
     needs: verify
     runs-on: ubuntu-latest
+    container: ubuntu:latest
+    if: ${{ github.event_name == 'push' }}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v5
+      - name: Setup
+        run: |
+          apt-get update
+          apt-get install -y git
+          apt-get clean
+
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-        # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yaml
-          config-name: release-drafter.yaml
+          fetch-depth: 0
+
+      - name: Setup node
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+
+      - name: Install release-it
+        run: npm i -g release-it
+
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Release
+        run: |
+          echo ${{ github.event_name }}
+          release-it --ci minor -c .github/.release-it.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

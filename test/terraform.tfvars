@@ -1,1 +1,0 @@
-tools_namespace="tools-argocd"
