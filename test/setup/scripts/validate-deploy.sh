@@ -3,13 +3,14 @@
 CLUSTER_TYPE="$1"
 NAMESPACE="$2"
 
-set -e
-
 echo "Verifying resources in $NAMESPACE namespace"
 
-kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.kind}{"/"}{.metadata.name}{": "}{.status.phase}{"\n"}{end}'
-POD_STATUSES=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded" | sort -u | tr '\n' ',')
+# TODO: For now we will exclude Pending status from failed statuses. Need to revisit
+PODS=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded" | grep -v "Pending")
+POD_STATUSES=$(echo "${PODS}" | sed -E "s/(.*):.*/\1/g")
 if [[ -n "${POD_STATUSES}" ]]; then
-  echo "  Pods have error statuses: ${POD_STATUSES}"
+  echo "  Pods have non-success statuses: ${PODS}"
   exit 1
 fi
+
+exit 0
