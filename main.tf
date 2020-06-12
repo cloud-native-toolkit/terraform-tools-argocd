@@ -157,7 +157,7 @@ resource "null_resource" "patch-solsa" {
   depends_on = [helm_release.solsa]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/patch-solsa.sh ${var.app_namespace}"
+    command = "${path.module}/scripts/patch-solsa.sh ${var.app_namespace} ${var.name}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
