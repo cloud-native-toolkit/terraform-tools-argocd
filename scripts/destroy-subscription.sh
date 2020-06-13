@@ -9,7 +9,7 @@ kubectl delete subscription argocd-operator -n "${NAMESPACE}" --wait=true
 
 # Ideally, deleting the subscription would clean the rest of this up...
 kubectl delete deployment argocd-operator -n "${NAMESPACE}" --wait=true
-kubectl delete serviceaccount -n "${NAMESPACE}" argocd-operator
-kubectl delete configmap -n "${NAMESPACE}" argocd-operator-lock
+kubectl delete serviceaccount -n "${NAMESPACE}" argocd-operator --wait=true
+kubectl delete configmap -n "${NAMESPACE}" argocd-operator-lock --wait=true
 
 exit 0

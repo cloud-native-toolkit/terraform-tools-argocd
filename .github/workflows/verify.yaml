@@ -52,8 +52,8 @@ jobs:
         run: |
           ls -lA
           mkdir -p /tmp/workspace/module
-          cp -R ./test/setup/stages/* /tmp/workspace
-          cp -R ./test/setup/scripts/* /tmp/workspace
+          cp -R ./.github/scripts/* /tmp/workspace
+          cp -R ./test/stages/* /tmp/workspace
           cp -R . /tmp/workspace/module
 
       # Deploy
@@ -92,7 +92,7 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     container: ubuntu:latest
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'push' && !contains(github.event.commits[0].message, '[skip release]') }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -115,10 +115,22 @@ jobs:
       - name: Install release-it
         run: npm i -g release-it
 
-      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Determine release-type
+        id: release-type
+        run: |
+          release_type=$(echo "$MESSAGE" | sed -E "s/.*\[(major|minor|patch)\].*/\1/")
+          if [ -n "$release_type" ]; then
+            echo "::set-output name=release-type::$release_type"
+          else
+            echo "::set-output name=release-type::minor"
+          fi
+        env:
+          MESSAGE: ${{ github.event.commits[0].message }}
+
       - name: Release
         run: |
           echo ${{ github.event_name }}
-          release-it --ci minor -c .github/.release-it.yaml
+          release-it --ci $RELEASE_TYPE -c .github/.release-it.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TYPE: ${{ steps.release-type.outputs.release-type }}

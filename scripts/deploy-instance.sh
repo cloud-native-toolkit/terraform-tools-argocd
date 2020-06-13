@@ -2,6 +2,8 @@
 
 SCRIPT_DIR=$(cd $(dirname "$0"); pwd -P)
 
+set -e
+
 CLUSTER_TYPE="$1"
 NAMESPACE="$2"
 INGRESS_SUBDOMAIN="$3"
@@ -52,9 +54,6 @@ spec:
     ingress: true
     insecure: true
 EOL
-#  tls:
-#    ca:
-#      secretName: ${TLS_SECRET_NAME}
 else
   cat <<EOL > ${YAML_FILE}
 apiVersion: argoproj.io/v1alpha1
@@ -75,6 +74,8 @@ spec:
     route: ${ROUTE}
 EOL
 fi
+
+echo "Applying argocd instance config:\n${YAML_FILE}"
 
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 
