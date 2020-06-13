@@ -1,6 +1,6 @@
 # ArgoCD terraform module
 
-![Verify and release module](https://github.com/ibm-garage-cloud/terraform-tools-argocd/workflows/Verify%20and%20release%20module/badge.svg)
+![Latest release](https://img.shields.io/github/v/release/ibm-garage-cloud/terraform-tools-argocd?sort=semver) ![Verify and release module](https://github.com/ibm-garage-cloud/terraform-tools-argocd/workflows/Verify%20and%20release%20module/badge.svg)
 
 Installs ArgoCD in the cluster via the operator. On OpenShift the module will also set up a route and
 enable OpenShift Auth. On Kubernetes, an ingress will be created.
