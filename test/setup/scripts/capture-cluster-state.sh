@@ -6,7 +6,7 @@ OUTFILE_DIR="$3"
 
 mkdir -p "${OUTFILE_DIR}"
 
-resources="deployment,statefulset,service,ingress,configmap,secret"
+resources="deployment,statefulset,service,ingress,configmap,secret,serviceaccount"
 if [[ "$PLATFORM" == "ocp3" ]] || [[ "$PLATFORM" == "ocp4" ]]; then
   resources="${resources},route"
 
