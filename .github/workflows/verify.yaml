@@ -12,6 +12,7 @@ on:
 jobs:
   verify:
     # The type of runner that the job will run on
+    if: "!contains(github.event.commits[0].message, '[skip ci]')"
     runs-on: ubuntu-latest
     container: ibmgaragecloud/cli-tools:0.3.0-lite
 
@@ -36,6 +37,8 @@ jobs:
     steps:
       - name: Validate config
         run: |
+          echo "Github sha: ${{ github.sha }}"
+          echo "Github ref: ${{ github.ref }}"
           if [ -z "${NAMESPACE}" ]; then
             echo "The NAMESPACE secret has not been set within the Git repo"
             exit 1
@@ -48,33 +51,34 @@ jobs:
       - name: Setup ${{ matrix.platform }}
         run: |
           ls -lA
-          mkdir -p /tmp/workspace/${{ matrix.platform }}
-          cp -R ./test/setup/stages/* /tmp/workspace/${{ matrix.platform }}
-          cp -R ./test/setup/scripts/* /tmp/workspace/${{ matrix.platform }}
+          mkdir -p /tmp/workspace/module
+          cp -R ./test/setup/stages/* /tmp/workspace
+          cp -R ./test/setup/scripts/* /tmp/workspace
+          cp -R . /tmp/workspace/module
 
       # Deploy
       - name: Deploy ${{ matrix.platform }}
         run: |
-          cd /tmp/workspace/${{ matrix.platform }}
+          cd /tmp/workspace
           ./apply.sh
 
       # Test deploy
       - name: Validate deploy ${{ matrix.platform }}
         run: |
-          cd /tmp/workspace/${{ matrix.platform }}
+          cd /tmp/workspace
           ./validate-deploy.sh ${{ matrix.platform }} ${{ env.TF_VAR_tools_namespace }}
 
       # Destroy
       - name: Destroy ${{ matrix.platform }}
         run: |
-          cd /tmp/workspace/${{ matrix.platform }}
+          cd /tmp/workspace
           ./destroy.sh
 
       # Test destroy
       - name: Validate destroy ${{ matrix.platform }}
         run: |
-          cd /tmp/workspace/${{ matrix.platform }}
-          ./capture-cluster-state.sh ${{ matrix.platform }} ${{ env.NAMESPACE }} $PWD/cluster-state/after/${{ env.NAMESPACE }}.out
+          cd /tmp/workspace
+          ./capture-cluster-state.sh ${{ matrix.platform }} $PWD/cluster-state/before $PWD/cluster-state/after
           if diff -q $PWD/cluster-state/before $PWD/cluster-state/after 1> /dev/null; then
             echo "Destroy completed successfully"
           else
