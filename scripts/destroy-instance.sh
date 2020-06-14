@@ -21,4 +21,6 @@ kubectl delete serviceaccount -n "${NAMESPACE}" argocd-dex-server --wait=true
 kubectl delete serviceaccount -n "${NAMESPACE}" argocd-redis-ha --wait=true
 kubectl delete serviceaccount -n "${NAMESPACE}" argocd-redis-ha-haproxy --wait=true
 
+sleep 20
+
 exit 0

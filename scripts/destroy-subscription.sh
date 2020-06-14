@@ -12,4 +12,6 @@ kubectl delete deployment argocd-operator -n "${NAMESPACE}" --wait=true
 kubectl delete serviceaccount -n "${NAMESPACE}" argocd-operator --wait=true
 kubectl delete configmap -n "${NAMESPACE}" argocd-operator-lock --wait=true
 
+sleep 20
+
 exit 0
