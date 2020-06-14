@@ -15,6 +15,8 @@ if [[ -n "${POD_STATUSES}" ]]; then
   exit 1
 fi
 
+set -e
+
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" == "iks" ]]; then
   ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
 else
@@ -24,7 +26,13 @@ fi
 echo "Validating endpoints:\n${ENDPOINTS}"
 
 echo "${ENDPOINTS}" | while read endpoint; do
-  ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 15 20
+  ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 10 10
+done
+
+CONFIG_URLS=$(kubectl get configmap -n tools -l grouping=garage-cloud-native-toolkit -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value')
+
+echo "${CONFIG_URLS}" | while read url; do
+  ${SCRIPT_DIR}/waitForEndpoint.sh "${url}" 10 10
 done
 
 exit 0
