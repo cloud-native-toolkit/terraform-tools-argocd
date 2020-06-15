@@ -23,7 +23,8 @@ else
   ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{"https://"}{.spec.host}{"\n"}{end}')
 fi
 
-echo "Validating endpoints:\n${ENDPOINTS}"
+echo "Validating endpoints:"
+echo "${ENDPOINTS}"
 
 echo "${ENDPOINTS}" | while read endpoint; do
   if [[ -n "${endpoint}" ]]; then
@@ -31,7 +32,10 @@ echo "${ENDPOINTS}" | while read endpoint; do
   fi
 done
 
-CONFIG_URLS=$(kubectl get configmap -n "${NAMESPPACE}" -l grouping=garage-cloud-native-toolkit -l app.kubernetes.io/component=tools -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value')
+CONFIG_URLS=$(kubectl get configmap -n "${NAMESPACE}" -l grouping=garage-cloud-native-toolkit -l app.kubernetes.io/component=tools -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value')
+
+echo "Validating config urls:"
+echo "${CONFIG_URLS}"
 
 echo "${CONFIG_URLS}" | while read url; do
   if [[ -n "${url}" ]]; then
