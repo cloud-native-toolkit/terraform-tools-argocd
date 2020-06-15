@@ -32,7 +32,7 @@ echo "${ENDPOINTS}" | while read endpoint; do
   fi
 done
 
-CONFIG_URLS=$(kubectl get configmap -n "${NAMESPACE}" -l grouping=garage-cloud-native-toolkit -l app.kubernetes.io/component=tools -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value')
+CONFIG_URLS=$(kubectl get configmap -n "${NAMESPACE}" -l grouping=garage-cloud-native-toolkit -l app.kubernetes.io/component=tools -o json | jq '.items[].data | to_entries | select(.[].key | endswith("_URL")) | .[].value' | sed "s/\"//g")
 
 echo "Validating config urls:"
 echo "${CONFIG_URLS}"
