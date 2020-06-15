@@ -2,6 +2,11 @@ URL="$1"
 WAIT_TIME=$2
 WAIT_COUNT=$3
 
+if [[ -z "${URL}" ]]; then
+  echo "Url is not defined"
+  exit 0
+fi
+
 if [[ -z "${WAIT_TIME}" ]]; then
   WAIT_TIME=15
 fi
