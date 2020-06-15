@@ -75,7 +75,8 @@ spec:
 EOL
 fi
 
-echo "Applying argocd instance config:\n${YAML_FILE}"
+echo "Applying argocd instance config:"
+cat "${YAML_FILE}"
 
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 
