@@ -28,8 +28,8 @@ if [[ -z ${PASSWORD_FILE} ]]; then
 fi
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
-  HOST="${NAME}-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
-  GRPC_HOST="${NAME}-grpc-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
+  HOST="${NAME}-server-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
+  GRPC_HOST="${NAME}-server-grpc-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
   ROUTE="false"
   INGRESS="true"
 else
@@ -75,7 +75,8 @@ spec:
 EOL
 fi
 
-echo "Applying argocd instance config:\n${YAML_FILE}"
+echo "Applying argocd instance config:"
+cat "${YAML_FILE}"
 
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 

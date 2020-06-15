@@ -110,7 +110,7 @@ resource "helm_release" "argocd-config" {
 
   set {
     name  = "otherConfig.grpc_url"
-    value = local.grpc_url_endpoint
+    value = var.cluster_type == "kubernetes" ? local.grpc_url_endpoint : ""
   }
 
   set {
