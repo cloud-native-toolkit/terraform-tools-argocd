@@ -28,8 +28,8 @@ if [[ -z ${PASSWORD_FILE} ]]; then
 fi
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
-  HOST="${NAME}-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
-  GRPC_HOST="${NAME}-grpc-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
+  HOST="${NAME}-server-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
+  GRPC_HOST="${NAME}-server-grpc-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
   ROUTE="false"
   INGRESS="true"
 else
