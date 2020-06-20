@@ -77,8 +77,18 @@ data "local_file" "argocd-password" {
   filename = local.password_file
 }
 
+resource "null_resource" "delete-rbac" {
+  provisioner "local-exec" {
+    command = "kubectl delete clusterrole/argocd-application-controller || kubectl delete clusterrolebinding/argocd-application-controller || kubectl delete clusterrole,clusterrolebinding -l app=argocd || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource "helm_release" "argocd-rbac" {
-  depends_on = [null_resource.argocd-instance]
+  depends_on = [null_resource.argocd-instance, null_resource.delete-rbac]
 
   name         = "argocd-rbac"
   repository   = "https://ibm-garage-cloud.github.io/toolkit-charts/"
