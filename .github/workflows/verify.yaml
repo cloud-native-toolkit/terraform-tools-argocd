@@ -20,7 +20,7 @@ jobs:
       matrix:
         platform: [iks118_vpc, ocp3, ocp4]
 #      max-parallel: 1
-#      fail-fast: false
+      fail-fast: false
 
     env:
       HOME: /home/devops
