@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 CLUSTER_TYPE="$1"
 OPERATOR_NAMESPACE="$2"
