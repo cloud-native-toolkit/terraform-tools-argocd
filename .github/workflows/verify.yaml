@@ -18,9 +18,9 @@ jobs:
 
     strategy:
       matrix:
-        platform: [iks, ocp3, ocp4]
+        platform: [iks118_vpc, ocp3, ocp4]
 #      max-parallel: 1
-#      fail-fast: false
+      fail-fast: false
 
     env:
       HOME: /home/devops
@@ -32,6 +32,7 @@ jobs:
       TF_VAR_region: ${{ secrets.TEST_REGION }}
       TF_VAR_cluster_name: ${{ secrets[format('TEST_CLUSTER_{0}', matrix.platform)] }}
       TF_VAR_cluster_type: ${{ matrix.platform }}
+      TF_VAR_vpc_cluster: ${{ endswith(matrix.platform, 'vpc') }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
