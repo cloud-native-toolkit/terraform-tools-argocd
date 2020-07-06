@@ -51,9 +51,13 @@ spec:
       host: ${GRPC_HOST}
       ingress:
         enabled: true
+        tls:
+          secretName: ${TLS_SECRET_NAME}
     host: ${HOST}
     ingress:
       enabled: true
+      tls:
+        secretName: ${TLS_SECRET_NAME}
     insecure: true
 EOL
 else
@@ -75,6 +79,10 @@ spec:
   server:
     route: 
       enabled: ${ROUTE}
+      tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
 EOL
 fi
 
