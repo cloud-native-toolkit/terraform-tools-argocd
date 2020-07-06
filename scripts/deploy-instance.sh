@@ -49,9 +49,11 @@ spec:
   server:
     grpc:
       host: ${GRPC_HOST}
-      ingress: true
+      ingress:
+        enabled: true
     host: ${HOST}
-    ingress: true
+    ingress:
+      enabled: true
     insecure: true
 EOL
 else
@@ -71,7 +73,8 @@ spec:
       g, system:cluster-admins, role:admin
     scopes: '[groups]'
   server:
-    route: ${ROUTE}
+    route: 
+      enabled: ${ROUTE}
 EOL
 fi
 
