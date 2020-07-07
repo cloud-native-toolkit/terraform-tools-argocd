@@ -3,20 +3,21 @@
 NAMESPACE="$1"
 NAME="$2"
 
-DEPLOYMENTS="${NAME}-server,${NAME}-repo-server,${NAME}-redis,${NAME}-dex-server,${NAME}-application-controller"
+DEPLOYMENTS="${NAME}-repo-server,${NAME}-redis,${NAME}-dex-server,${NAME}-application-controller,${NAME}-server"
 
 IFS=","
 for DEPLOYMENT in ${DEPLOYMENTS}; do
   count=0
   until kubectl get deployment "${DEPLOYMENT}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
-    if [[ ${count} -eq 12 ]]; then
-      echo "Timed out waiting for deployment/${DEPLOYMENT} to start"
+    if [[ ${count} -eq 24 ]]; then
+      echo "Timed out waiting for deployment/${DEPLOYMENT} in ${NAMESPACE} to start"
+      kubectl get deployment "${DEPLOYMENT}" -n "${NAMESPACE}"
       exit 1
     else
       count=$((count + 1))
     fi
 
-    echo "Waiting for deployment/${DEPLOYMENT} to start"
+    echo "Waiting for deployment/${DEPLOYMENT} in ${NAMESPACE} to start"
     sleep 10
   done
 

@@ -61,7 +61,39 @@ kubectl apply -f ${YAML_FILE} -n "${OPERATOR_NAMESPACE}"
 set +e
 
 sleep 2
+count=0
 until kubectl get crd/argocds.argoproj.io 1>/dev/null 2>/dev/null; do
-  echo "Waiting for ArgoCD operator to install"
-  sleep 30
+  if [[ $count -eq 10 ]]; then
+    echo "Timed out waiting for ArgoCD CRD to be installed"
+    exit 1
+  fi
+
+  echo "Waiting for ArgoCD CRD to be installed"
+  sleep 15
+
+  count=$((count+1))
+done
+
+count=0
+until kubectl get csv -n "${OPERATOR_NAMESPACE}" | grep -q argocd-operator; do
+  if [[ $count -eq 10 ]]; then
+    echo "Timed out waiting for ArgoCD CSV install to be started in ${OPERATOR_NAMESPACE}"
+    exit 1
+  fi
+
+  echo "Waiting for ArgoCD CSV install to be started in ${OPERATOR_NAMESPACE}"
+  sleep 15
+done
+
+CSV_NAME=$(kubectl get csv -n "${OPERATOR_NAMESPACE}" -o custom-columns=name:.metadata.name | grep argocd-operator)
+
+count=0
+until [[ $(kubectl get csv -n "${OPERATOR_NAMESPACE}" "${CSV_NAME}" -o jsonpath='{.status.phase}') == "Succeeded" ]]; do
+  if [[ $count -eq 10 ]]; then
+    echo "Timed out waiting for ArgoCD CSV to be successfully installed in ${OPERATOR_NAMESPACE}"
+    exit 1
+  fi
+
+  echo "Waiting for ArgoCD CSV to be successfully installed in ${OPERATOR_NAMESPACE}"
+  sleep 15
 done

@@ -49,9 +49,20 @@ spec:
   server:
     grpc:
       host: ${GRPC_HOST}
-      ingress: true
+      ingress:
+        enabled: true
+        tls:
+          - secretName: ${TLS_SECRET_NAME}
+            hosts:
+              - ${GRPC_HOST}
     host: ${HOST}
-    ingress: true
+    ingress:
+      enabled: true
+      path: /
+      tls:
+        - secretName: ${TLS_SECRET_NAME}
+          hosts:
+            - ${HOST}
     insecure: true
 EOL
 else
@@ -71,7 +82,12 @@ spec:
       g, system:cluster-admins, role:admin
     scopes: '[groups]'
   server:
-    route: ${ROUTE}
+    route: 
+      enabled: ${ROUTE}
+      tls:
+          termination: passthrough
+          insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
 EOL
 fi
 
@@ -81,16 +97,5 @@ cat "${YAML_FILE}"
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 
 "${SCRIPT_DIR}/wait-for-deployments.sh" "${NAMESPACE}" "${NAME}"
-
-# For now, patch the ingress. Eventually the operator will handle this correctly
-if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
-  INGRESS_NAME=$(kubectl get ingress -n "${NAMESPACE}" -o=custom-columns=name:.metadata.name | grep -E "^argocd" | grep -vE "argocd.*grpc")
-  kubectl patch ingress -n "${NAMESPACE}" "${INGRESS_NAME}" --type json \
-    -p="[{\"op\": \"replace\", \"path\": \"/spec/tls/0/hosts/0\", value: \"${HOST}\"}, {\"op\": \"replace\", \"path\": \"/spec/tls/0/secretName\", \"value\": \"${TLS_SECRET_NAME}\"}]"
-
-  GRPC_INGRESS_NAME=$(kubectl get ingress -n "${NAMESPACE}" -o=custom-columns=name:.metadata.name | grep -E "^argocd.*grpc")
-  kubectl patch ingress -n "${NAMESPACE}" "${GRPC_INGRESS_NAME}" --type json \
-    -p="[{\"op\": \"replace\", \"path\": \"/spec/tls/0/hosts/0\", value: \"${GRPC_HOST}\"}, {\"op\": \"replace\", \"path\": \"/spec/tls/0/secretName\", \"value\": \"${TLS_SECRET_NAME}\"}]"
-fi
 
 kubectl get secret argocd-cluster -n "${NAMESPACE}" -o jsonpath='{.data.admin\.password}' | base64 -d > "${PASSWORD_FILE}"
