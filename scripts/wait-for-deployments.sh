@@ -11,6 +11,7 @@ for DEPLOYMENT in ${DEPLOYMENTS}; do
   until kubectl get deployment "${DEPLOYMENT}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
     if [[ ${count} -eq 24 ]]; then
       echo "Timed out waiting for deployment/${DEPLOYMENT} in ${NAMESPACE} to start"
+      kubectl get deployment "${DEPLOYMENT}" -n "${NAMESPACE}"
       exit 1
     else
       count=$((count + 1))
