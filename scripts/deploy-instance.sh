@@ -85,7 +85,7 @@ spec:
     route: 
       enabled: ${ROUTE}
       tls:
-          termination: edge
+          termination: passthrough
           insecureEdgeTerminationPolicy: Redirect
       wildcardPolicy: None
 EOL
