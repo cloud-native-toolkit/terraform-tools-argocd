@@ -52,12 +52,17 @@ spec:
       ingress:
         enabled: true
         tls:
-          secretName: ${TLS_SECRET_NAME}
+          - secretName: ${TLS_SECRET_NAME}
+            hosts:
+              - ${GRPC_HOST}
     host: ${HOST}
     ingress:
       enabled: true
+      path: /
       tls:
-        secretName: ${TLS_SECRET_NAME}
+        - secretName: ${TLS_SECRET_NAME}
+          hosts:
+            - ${HOST}
     insecure: true
 EOL
 else
