@@ -14,11 +14,11 @@ jobs:
     # The type of runner that the job will run on
     if: "!contains(github.event.commits[0].message, '[skip ci]')"
     runs-on: ubuntu-latest
-    container: ibmgaragecloud/cli-tools:0.4.0-lite
+    container: ibmgaragecloud/cli-tools:0.7.0-lite
 
     strategy:
       matrix:
-        platform: [iks118_vpc, ocp3, ocp4_vpc]
+        platform: [ocp4_vpc]
 #      max-parallel: 1
       fail-fast: false
 
