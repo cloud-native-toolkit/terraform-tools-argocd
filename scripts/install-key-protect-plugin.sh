@@ -4,6 +4,7 @@ NAMESPACE="$1"
 NAME="$2"
 
 set -e
+set +x
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR=".tmp"
