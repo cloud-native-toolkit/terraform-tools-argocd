@@ -24,7 +24,7 @@ curl -Lo ${TMP_DIR}/install-plugin.tar.gz "https://github.com/ibm-garage-cloud/a
 
 echo "Extracting Key Protect plugin installer"
 mkdir -p "${TMP_DIR}/argocd/bin"
-cd "${TMP_DIR}/argocd/bin" && tar xzf ${TMP_DIR}/install-plugin.tar.gz && cd -
+cd "${TMP_DIR}/argocd/bin" && tar xzvf ${TMP_DIR}/install-plugin.tar.gz && cd -
 
 echo "Installing Key Protect plugin dependencies"
 ${TMP_DIR}/argocd/bin/install-plugin-dependencies.sh "${NAMESPACE}"
