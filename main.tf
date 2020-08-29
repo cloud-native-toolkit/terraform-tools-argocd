@@ -179,7 +179,7 @@ resource "helm_release" "solsa" {
   }
 }
 
-resource "null_resource" "patch-solsa" {
+resource "null_resource" "install-solsa-plugin" {
   depends_on = [helm_release.solsa]
 
   provisioner "local-exec" {
@@ -187,6 +187,19 @@ resource "null_resource" "patch-solsa" {
 
     environment = {
       KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
+resource "null_resource" "install-key-protect-plugin" {
+  depends_on = [null_resource.argocd-instance]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/install-key-protect-plugin.sh ${var.app_namespace} ${var.name}"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+      TMP_DIR    = local.tmp_dir
     }
   }
 }
