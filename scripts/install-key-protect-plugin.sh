@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
+CURRENT_DIR=$(cd "${PWD}"; pwd -P)
+
 NAMESPACE="$1"
 NAME="$2"
 
 set -e
 
 if [[ -z "${TMP_DIR}" ]]; then
-  TMP_DIR=".tmp"
+  TMP_DIR="${CURRENT_DIR}/.tmp"
 fi
 mkdir -p "${TMP_DIR}"
 
