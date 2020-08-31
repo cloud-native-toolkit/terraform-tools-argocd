@@ -192,7 +192,7 @@ resource "null_resource" "install-solsa-plugin" {
 }
 
 resource "null_resource" "install-key-protect-plugin" {
-  depends_on = [null_resource.argocd-instance]
+  depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/install-key-protect-plugin.sh ${var.app_namespace} ${var.name}"
