@@ -16,6 +16,13 @@ else
   exit 1
 fi
 
+if kubectl get configmap -n "${NAMESPACE}" argocd-cm -o jsonpath='{.data.configManagementPlugins}' | grep "name: key-protect-secret"; then
+  echo "Key Protect Secret plugin found"
+else
+  echo "Key Protect Secret plugin not installed"
+  exit 1
+fi
+
 # TODO: For now we will exclude Pending status from failed statuses. Need to revisit
 PODS=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded" | grep -v "Pending")
 POD_STATUSES=$(echo "${PODS}" | sed -E "s/(.*):.*/\1/g")
