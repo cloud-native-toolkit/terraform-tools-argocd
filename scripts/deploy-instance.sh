@@ -72,14 +72,15 @@ kind: ArgoCD
 metadata:
   name: ${NAME}
 spec:
+  version: v1.6.1
   dex:
     image: quay.io/ablock/dex
     openShiftOAuth: true
     version: openshift-connector
   rbac:
-    defaultPolicy: 'role:readonly'
+    defaultPolicy: 'role:admin'
     policy: |
-      g, system:cluster-admins, role:admin
+      g, argocd-admins, role:admin
     scopes: '[groups]'
   server:
     route: 
@@ -88,6 +89,12 @@ spec:
           termination: passthrough
           insecureEdgeTerminationPolicy: Redirect
       wildcardPolicy: None
+---
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: argocd-admins
+users: []
 EOL
 fi
 
