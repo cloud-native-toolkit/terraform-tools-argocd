@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR=$(cd $(dirname $0); pwd -P)
+
 CURRENT_DIR=$(cd "${PWD}"; pwd -P)
 
 NAMESPACE="$1"

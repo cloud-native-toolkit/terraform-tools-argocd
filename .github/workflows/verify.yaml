@@ -34,10 +34,10 @@ jobs:
         uses: ibm-garage-cloud/action-module-verify@main
         with:
           clusterId: ${{ matrix.platform }}
-          consoleLinkName: ${{ secrets.CONSOLE_LINK_NAME }}
         env:
           TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
           IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
+          CONSOLE_LINK_NAME: ${{ secrets.CONSOLE_LINK_NAME }}
 
   release:
     #    if: ${{ github.event_name == 'push' }}
