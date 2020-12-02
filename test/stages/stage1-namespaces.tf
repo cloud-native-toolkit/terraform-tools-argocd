@@ -4,5 +4,5 @@ module "dev_tools_namespace" {
   cluster_type             = module.dev_cluster.type_code
   cluster_config_file_path = module.dev_cluster.config_file_path
   tls_secret_name          = module.dev_cluster.tls_secret_name
-  name                     = var.tools_namespace
+  name                     = var.namespace
 }
