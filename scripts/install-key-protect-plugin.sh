@@ -33,3 +33,5 @@ ${TMP_DIR}/argocd/bin/install-plugin-dependencies.sh "${NAMESPACE}"
 
 echo "Installing Key Protect plugin"
 ${TMP_DIR}/argocd/bin/install-plugin.sh "${NAMESPACE}" "${NAME}"
+
+"${SCRIPT_DIR}/wait-for-deployments.sh" "${NAMESPACE}" "${NAME}"
