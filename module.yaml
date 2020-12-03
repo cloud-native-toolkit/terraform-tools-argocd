@@ -20,7 +20,7 @@ versions:
           version: ">= 2.0.0"
     - id: olm
       refs:
-        - source: github.com/ibm-garage-cloud/terraform-software-olm
+        - source: github.com/ibm-garage-cloud/terraform-k8s-olm
           version: ">= 1.2.2"
     - id: namespace
       refs:
