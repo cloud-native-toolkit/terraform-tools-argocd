@@ -32,11 +32,11 @@ versions:
     - name: cluster_type
       moduleRef:
         id: cluster
-        output: type_code
+        output: platform.type_code
     - name: ingress_subdomain
       moduleRef:
         id: cluster
-        output: ingress_hostname
+        output: platform.ingress
     - name: cluster_config_file
       moduleRef:
         id: cluster
