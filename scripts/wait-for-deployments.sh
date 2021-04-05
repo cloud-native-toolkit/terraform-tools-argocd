@@ -23,3 +23,17 @@ for DEPLOYMENT in ${DEPLOYMENTS}; do
 
   kubectl rollout status deployment "${DEPLOYMENT}" -n "${NAMESPACE}"
 done
+
+count=0
+while kubectl get pods -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' -n "${NAMESPACE}" | grep -q Pending; do
+  if [[ ${count} -eq 24 ]]; then
+    echo "Timed out waiting for pods in ${NAMESPACE} to start"
+    kubectl get pods -n "${NAMESPACE}"
+    exit 1
+  else
+    count=$((count + 1))
+  fi
+
+  echo "Waiting for all pods in ${NAMESPACE} to start"
+  sleep 10
+done
