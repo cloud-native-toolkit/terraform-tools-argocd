@@ -72,7 +72,6 @@ kind: ArgoCD
 metadata:
   name: ${NAME}
 spec:
-  version: v1.6.1
   dex:
     image: quay.io/ablock/dex
     openShiftOAuth: true
