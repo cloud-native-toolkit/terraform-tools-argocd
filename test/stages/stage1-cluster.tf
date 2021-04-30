@@ -13,4 +13,5 @@ module "dev_cluster" {
   vpc_subnets         = []
   vpc_subnet_count    = 0
   cos_id              = ""
+  login               = "true"
 }
