@@ -51,6 +51,7 @@ spec:
       host: ${GRPC_HOST}
       ingress:
         enabled: true
+        path: /
         tls:
           - secretName: ${TLS_SECRET_NAME}
             hosts:

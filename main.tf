@@ -84,7 +84,7 @@ resource "helm_release" "argocd-rbac" {
   depends_on = [null_resource.argocd-instance, null_resource.delete-rbac]
 
   name         = "argocd-rbac"
-  repository   = "https://ibm-garage-cloud.github.io/toolkit-charts/"
+  repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "argocd-config"
   namespace    = var.app_namespace
   force_update = true
@@ -112,7 +112,7 @@ resource "helm_release" "argocd-config" {
   depends_on = [null_resource.argocd-instance, null_resource.delete-consolelink]
 
   name         = "argocd"
-  repository   = "https://ibm-garage-cloud.github.io/toolkit-charts/"
+  repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "tool-config"
   namespace    = var.app_namespace
   force_update = true

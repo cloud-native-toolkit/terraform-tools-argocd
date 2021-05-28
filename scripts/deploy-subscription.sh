@@ -3,7 +3,6 @@
 CLUSTER_TYPE="$1"
 OPERATOR_NAMESPACE="$2"
 OLM_NAMESPACE="$3"
-OPERATOR_VERSION="$4"
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR=".tmp"
@@ -11,9 +10,7 @@ fi
 mkdir -p "${TMP_DIR}"
 
 if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
-  SOURCE="community-operators"
-else
-  SOURCE="operatorhubio-catalog"
+  CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
 fi
 
 if [[ -z "${OLM_NAMESPACE}" ]]; then
@@ -24,33 +21,38 @@ if [[ -z "${OLM_NAMESPACE}" ]]; then
   fi
 fi
 
-if [[ -z "${OPERATOR_VERSION}" ]]; then
-  OPERATOR_VERSION="v0.0.9"
+if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
+  if [[ "${CLUSTER_VERSION}" =~ ^4.6 ]]; then
+    SOURCE="redhat-operators"
+  else
+    SOURCE="community-operators"
+  fi
+else
+  SOURCE="operatorhubio-catalog"
+fi
+
+if [[ "${CLUSTER_VERSION}" =~ ^4.[6-9] ]]; then
+  NAME="openshift-gitops-operator"
+  CHANNEL="preview"
+  OPERATOR_NAMESPACE="openshift-operators"
+else
+  NAME="argocd-operator"
+  CHANNEL="alpha"
 fi
 
 YAML_FILE=${TMP_DIR}/argocd-subscription.yaml
 
 cat <<EOL > ${YAML_FILE}
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: ${OPERATOR_NAMESPACE}-operatorgroup
-  annotations:
-    olm.providedAPIs: AppProject.v1alpha1.argoproj.io,Application.v1alpha1.argoproj.io,ArgoCD.v1alpha1.argoproj.io,ArgoCDExport.v1alpha1.argoproj.io
-spec:
-  targetNamespaces:
-  - ${OPERATOR_NAMESPACE}
----
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: argocd-operator
+  name: ${NAME}
 spec:
-  channel: alpha
+  channel: ${CHANNEL}
   installPlanApproval: Automatic
-  name: argocd-operator
-  source: $SOURCE
-  sourceNamespace: $OLM_NAMESPACE
+  name: ${NAME}
+  source: ${SOURCE}
+  sourceNamespace: ${OLM_NAMESPACE}
 EOL
 
 set -e
