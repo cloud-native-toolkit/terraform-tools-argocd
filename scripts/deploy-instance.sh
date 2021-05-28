@@ -50,13 +50,18 @@ spec:
     grpc:
       host: ${GRPC_HOST}
       ingress:
+        annotations:
+          kubernetes.io/ingress.class: public-iks-k8s-nginx
         enabled: true
+        path: /
         tls:
           - secretName: ${TLS_SECRET_NAME}
             hosts:
               - ${GRPC_HOST}
     host: ${HOST}
     ingress:
+      annotations:
+        kubernetes.io/ingress.class: public-iks-k8s-nginx
       enabled: true
       path: /
       tls:
