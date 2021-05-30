@@ -17,7 +17,10 @@ jobs:
 
     strategy:
       matrix:
-        platform: [ocp4_latest]
+        platform:
+        - ocp4_latest
+        - ocp45
+        - kubernetes
       #      max-parallel: 1
       fail-fast: false
 
