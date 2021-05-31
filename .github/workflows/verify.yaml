@@ -44,7 +44,7 @@ jobs:
 
       - name: Verify destroy on ${{ matrix.platform }}
         uses: ibm-garage-cloud/action-module-verify-destroy@main
-        if: ${{ always() }}
+#        if: ${{ always() }}
         with:
           clusterId: ${{ matrix.platform }}
         env:
