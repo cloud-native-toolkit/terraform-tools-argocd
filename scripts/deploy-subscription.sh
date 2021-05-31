@@ -88,7 +88,7 @@ until kubectl get csv -n "${OPERATOR_NAMESPACE}" | grep -q "${NAME}"; do
   sleep 15
 done
 
-CSV_NAME=$(kubectl get csv -n "${OPERATOR_NAMESPACE}" -o custom-columns=name:.metadata.name | grep argocd-operator)
+CSV_NAME=$(kubectl get csv -n "${OPERATOR_NAMESPACE}" -o custom-columns=name:.metadata.name | grep "${NAME}")
 
 count=0
 until [[ $(kubectl get csv -n "${OPERATOR_NAMESPACE}" "${CSV_NAME}" -o jsonpath='{.status.phase}') == "Succeeded" ]]; do
