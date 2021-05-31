@@ -16,6 +16,10 @@ locals {
 resource null_resource cluster_version {
   provisioner "local-exec" {
     command = "${path.module}/scripts/get-cluster-version.sh ${local.version_file}"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
   }
 }
 
