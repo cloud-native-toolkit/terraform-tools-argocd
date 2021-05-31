@@ -33,6 +33,7 @@ fi
 
 if [[ "${CLUSTER_VERSION}" =~ ^4.[6-9] ]]; then
   NAMESPACE="openshift-gitops"
+  NAME="argocd-cluster"
 fi
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
@@ -120,6 +121,8 @@ cat "${YAML_FILE}"
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 
 if [[ "${CLUSTER_VERSION}" =~ ^4.6 ]]; then
+  echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
+
   PATCH_FILE="${TMP_DIR}/argocd-instance-patch.yaml"
   cat <<EOL > ${PATCH_FILE}
 spec:
