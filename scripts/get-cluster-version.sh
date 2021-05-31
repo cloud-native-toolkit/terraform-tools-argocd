@@ -13,4 +13,4 @@ else
 fi
 echo "Cluster version: ${CLUSTER_VERSION}"
 
-echo "${CLUSTER_VERSION}" > "${OUTPUT_FILE}"
+echo -n "${CLUSTER_VERSION}" > "${OUTPUT_FILE}"
