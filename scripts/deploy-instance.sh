@@ -8,10 +8,11 @@ CLUSTER_TYPE="$1"
 NAMESPACE="$2"
 INGRESS_SUBDOMAIN="$3"
 NAME="$4"
-TLS_SECRET_NAME="$5"
+CLUSTER_VERSION="$5"
+TLS_SECRET_NAME="$6"
 
 if [[ -z "${NAME}" ]]; then
-  NAME=argocd
+  NAME=argocd-cluster
 fi
 
 if [[ -z "${TLS_SECRET_NAME}" ]]; then
@@ -27,13 +28,8 @@ if [[ -z ${PASSWORD_FILE} ]]; then
   PASSWORD_FILE="/dev/stdout"
 fi
 
-if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
-  CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
-fi
-
 if [[ "${CLUSTER_VERSION}" =~ ^4.[6-9] ]]; then
   NAMESPACE="openshift-gitops"
-  NAME="argocd-cluster"
 fi
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
@@ -121,7 +117,6 @@ cat "${YAML_FILE}"
 kubectl apply -f ${YAML_FILE} -n "${NAMESPACE}" || exit 1
 
 if [[ "${CLUSTER_VERSION}" =~ ^4.6 ]]; then
-  echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
 
   PATCH_FILE="${TMP_DIR}/argocd-instance-patch.yaml"
   cat <<EOL > ${PATCH_FILE}
@@ -144,9 +139,15 @@ spec:
       wildcardPolicy: None
 EOL
 
+  echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
+  echo "oc patch argocd ${NAME} -n '${NAMESPACE}' --patch xxx"
+  echo "Patch file: "
+  cat "${PATCH_FILE}"
+
   oc patch argocd ${NAME} -n "${NAMESPACE}" --patch "$(cat ${PATCH_FILE})"
 fi
 
+echo "Waiting for deployments"
 "${SCRIPT_DIR}/wait-for-deployments.sh" "${NAMESPACE}" "${NAME}"
 
 kubectl get secret argocd-cluster -n "${NAMESPACE}" -o jsonpath='{.data.admin\.password}' | base64 -d > "${PASSWORD_FILE}"

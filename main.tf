@@ -1,22 +1,38 @@
 
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
-  host              = "${var.name}-server-${var.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${var.name}-server-grpc-${var.app_namespace}.${var.ingress_subdomain}"
+  name              = "argocd-cluster"
+  version_file      = "${local.tmp_dir}/argocd-cluster.version"
+  cluster_version   = local_file.cluster_version.content
+  app_namespace     = regex("", local.cluster_version) ? "openshift-gitops" : var.app_namespace
+  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
+  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
   tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
 }
 
+resource "null_resource" "cluster_version" {
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/get-cluster-version.sh ${local.version_file}"
+  }
+}
+
+resource local_file cluster_version {
+  depends_on = [null_resource.cluster_version]
+
+  filename = local.version_file
+}
+
 resource "null_resource" "argocd-subscription" {
   triggers = {
     kubeconfig = var.cluster_config_file
-    namespace  = var.app_namespace
+    namespace  = local.app_namespace
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace}"
+    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace} ${local.cluster_version}"
 
     environment = {
       TMP_DIR    = local.tmp_dir
@@ -40,12 +56,12 @@ resource "null_resource" "argocd-instance" {
 
   triggers = {
     kubeconfig = var.cluster_config_file
-    namespace  = var.app_namespace
-    name       = var.name
+    namespace  = local.app_namespace
+    name       = local.name
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-instance.sh ${var.cluster_type} ${self.triggers.namespace} ${var.ingress_subdomain} ${self.triggers.name}"
+    command = "${path.module}/scripts/deploy-instance.sh '${var.cluster_type}' '${self.triggers.namespace}' '${var.ingress_subdomain}' '${self.triggers.name}' '${local.cluster_version}'"
 
     environment = {
       KUBECONFIG    = self.triggers.kubeconfig
@@ -86,7 +102,7 @@ resource "helm_release" "argocd-rbac" {
   name         = "argocd-rbac"
   repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "argocd-config"
-  namespace    = var.app_namespace
+  namespace    = local.app_namespace
   force_update = true
   replace      = true
 
@@ -114,7 +130,7 @@ resource "helm_release" "argocd-config" {
   name         = "argocd"
   repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "tool-config"
-  namespace    = var.app_namespace
+  namespace    = local.app_namespace
   force_update = true
 
   set {
@@ -158,7 +174,7 @@ resource "helm_release" "solsa" {
 
   name         = "solsa"
   chart        = "${path.module}/charts/solsa-cm"
-  namespace    = var.app_namespace
+  namespace    = local.app_namespace
   force_update = true
 
   set {
@@ -176,7 +192,7 @@ resource "null_resource" "install-solsa-plugin" {
   depends_on = [helm_release.solsa]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/patch-solsa.sh ${var.app_namespace} ${var.name}"
+    command = "${path.module}/scripts/patch-solsa.sh ${local.app_namespace} ${local.name}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -188,7 +204,7 @@ resource "null_resource" "install-key-protect-plugin" {
   depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/install-key-protect-plugin.sh ${var.app_namespace} ${var.name}"
+    command = "${path.module}/scripts/install-key-protect-plugin.sh ${local.app_namespace} ${local.name}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file

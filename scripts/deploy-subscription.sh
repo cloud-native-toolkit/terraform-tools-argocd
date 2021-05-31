@@ -3,16 +3,12 @@
 CLUSTER_TYPE="$1"
 OPERATOR_NAMESPACE="$2"
 OLM_NAMESPACE="$3"
+CLUSTER_VERSION="$4"
 
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR=".tmp"
 fi
 mkdir -p "${TMP_DIR}"
-
-if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
-  CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
-fi
-echo "Cluster version: ${CLUSTER_VERSION}"
 
 if [[ -z "${OLM_NAMESPACE}" ]]; then
   if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
