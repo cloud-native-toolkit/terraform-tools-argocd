@@ -31,6 +31,10 @@ if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
   CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
 fi
 
+if [[ "${CLUSTER_VERSION}" =~ ^4.[6-9] ]]; then
+  NAMESPACE="openshift-gitops"
+fi
+
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
   HOST="${NAME}-server-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
   GRPC_HOST="${NAME}-server-grpc-${NAMESPACE}.${INGRESS_SUBDOMAIN}"
