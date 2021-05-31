@@ -130,13 +130,6 @@ spec:
     policy: |
       g, argocd-admins, role:admin
     scopes: '[groups]'
-  server:
-    route:
-      enabled: ${ROUTE}
-      tls:
-          termination: passthrough
-          insecureEdgeTerminationPolicy: Redirect
-      wildcardPolicy: None
 EOL
 
   echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
@@ -144,7 +137,7 @@ EOL
   echo "Patch file: "
   cat "${PATCH_FILE}"
 
-  oc patch argocd ${NAME} -n "${NAMESPACE}" --patch "$(cat ${PATCH_FILE})"
+  oc patch argocd ${NAME} -n "${NAMESPACE}" --type merge -p "$(cat ${PATCH_FILE})"
 fi
 
 echo "Waiting for deployments"
