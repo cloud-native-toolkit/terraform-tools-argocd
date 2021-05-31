@@ -12,6 +12,7 @@ mkdir -p "${TMP_DIR}"
 if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
   CLUSTER_VERSION=$(oc get clusterversion | grep -E "^version" | sed -E "s/version[ \t]+([0-9.]+).*/\1/g")
 fi
+echo "Cluster version: ${CLUSTER_VERSION}"
 
 if [[ -z "${OLM_NAMESPACE}" ]]; then
   if [[ "${CLUSTER_TYPE}" == "ocp4" ]]; then
@@ -77,7 +78,7 @@ until kubectl get crd/argocds.argoproj.io 1>/dev/null 2>/dev/null; do
 done
 
 count=0
-until kubectl get csv -n "${OPERATOR_NAMESPACE}" | grep -q argocd-operator; do
+until kubectl get csv -n "${OPERATOR_NAMESPACE}" | grep -q "${NAME}"; do
   if [[ $count -eq 10 ]]; then
     echo "Timed out waiting for ArgoCD CSV install to be started in ${OPERATOR_NAMESPACE}"
     exit 1
