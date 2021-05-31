@@ -4,7 +4,7 @@ locals {
   name              = "argocd-cluster"
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = local_file.cluster_version.content
-  app_namespace     = regex("", local.cluster_version) ? "openshift-gitops" : var.app_namespace
+  app_namespace     = regex("^4.[6-9]", local.cluster_version) ? "openshift-gitops" : var.app_namespace
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
   grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
