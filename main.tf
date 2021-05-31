@@ -101,6 +101,14 @@ resource "null_resource" "delete-rbac" {
       KUBECONFIG = var.cluster_config_file
     }
   }
+
+  provisioner "local-exec" {
+    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.argocd-rbac.v1 || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
 }
 
 resource "helm_release" "argocd-rbac" {
@@ -119,11 +127,17 @@ resource "helm_release" "argocd-rbac" {
   }
 }
 
-resource "null_resource" "delete-consolelink" {
-  count = var.cluster_type != "kubernetes" ? 1 : 0
+resource "null_resource" "delete-argocd-helm" {
+  provisioner "local-exec" {
+    command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
 
   provisioner "local-exec" {
-    command = "kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
+    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.argocd.v1 || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -132,7 +146,7 @@ resource "null_resource" "delete-consolelink" {
 }
 
 resource "helm_release" "argocd-config" {
-  depends_on = [null_resource.argocd-instance, null_resource.delete-consolelink]
+  depends_on = [null_resource.argocd-instance, null_resource.delete-argocd-helm]
 
   name         = "argocd"
   repository   = "https://charts.cloudnativetoolkit.dev"
@@ -176,8 +190,18 @@ resource "helm_release" "argocd-config" {
   }
 }
 
+resource "null_resource" "delete-solsa-helm" {
+  provisioner "local-exec" {
+    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.solsa.v1 || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource "helm_release" "solsa" {
-  depends_on = [null_resource.argocd-instance]
+  depends_on = [null_resource.argocd-instance, null_resource.delete-solsa-helm]
 
   name         = "solsa"
   chart        = "${path.module}/charts/solsa-cm"
