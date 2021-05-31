@@ -3,7 +3,7 @@ locals {
   tmp_dir           = "${path.cwd}/.tmp"
   name              = "argocd-cluster"
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
-  cluster_version   = local_file.cluster_version.content
+  cluster_version   = data.local_file.cluster_version.content
   app_namespace     = regex("^4.[6-9]", local.cluster_version) ? "openshift-gitops" : var.app_namespace
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
   grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
@@ -13,19 +13,21 @@ locals {
   tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
 }
 
-resource "null_resource" "cluster_version" {
+resource null_resource cluster_version {
   provisioner "local-exec" {
     command = "${path.module}/scripts/get-cluster-version.sh ${local.version_file}"
   }
 }
 
-resource local_file cluster_version {
+data local_file cluster_version {
   depends_on = [null_resource.cluster_version]
 
   filename = local.version_file
 }
 
 resource "null_resource" "argocd-subscription" {
+  depends_on = [null_resource.cluster_version]
+
   triggers = {
     kubeconfig = var.cluster_config_file
     namespace  = local.app_namespace
