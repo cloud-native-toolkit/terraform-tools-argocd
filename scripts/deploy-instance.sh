@@ -133,11 +133,12 @@ spec:
 EOL
 
   echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
-  echo "oc patch argocd ${NAME} -n '${NAMESPACE}' --patch xxx"
+  echo "oc patch argocd ${NAME} -n '${NAMESPACE}' --type merge --patch xxx"
   echo "Patch file: "
   cat "${PATCH_FILE}"
 
-  oc patch argocd ${NAME} -n "${NAMESPACE}" --type merge -p "$(cat ${PATCH_FILE})"
+#  oc patch argocd ${NAME} -n "${NAMESPACE}" --type merge -p "$(cat ${PATCH_FILE})"
+  echo "Skipping patch for now"
 fi
 
 echo "Waiting for deployments"
