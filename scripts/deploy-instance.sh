@@ -71,7 +71,7 @@ spec:
             - ${HOST}
     insecure: true
 EOL
-elif kubecctl get argocd "${NAME}" -n "${NAMESPACE}"; then
+elif kubectl get argocd "${NAME}" -n "${NAMESPACE}"; then
   cat <<EOL > ${YAML_FILE}
 apiVersion: user.openshift.io/v1
 kind: Group
