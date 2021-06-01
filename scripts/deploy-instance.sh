@@ -71,7 +71,7 @@ spec:
             - ${HOST}
     insecure: true
 EOL
-elif [[ "${CLUSTER_VERSION}" =~ ^4.6 ]]; then
+elif kubecctl get argocd "${NAME}" -n "${NAMESPACE}"; then
   cat <<EOL > ${YAML_FILE}
 apiVersion: user.openshift.io/v1
 kind: Group
@@ -130,6 +130,13 @@ spec:
     policy: |
       g, argocd-admins, role:admin
     scopes: '[groups]'
+  server:
+    route:
+      enabled: ${ROUTE}
+      tls:
+          termination: passthrough
+          insecureEdgeTerminationPolicy: Redirect
+      wildcardPolicy: None
 EOL
 
   echo "Patching argocd instance: ${NAMESPACE}/${NAME}"
