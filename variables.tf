@@ -32,11 +32,5 @@ variable "ingress_subdomain" {
 variable "name" {
   type        = string
   description = "The name for the instance"
-  default     = "argocd"
-}
-
-variable "operator_version" {
-  type        = string
-  description = "The starting version of the CSV"
-  default     = "v0.0.9"
+  default     = "argocd-cluster"
 }
