@@ -20,7 +20,7 @@ jobs:
         platform:
         - ocp4_latest
         - ocp45
-        - kubernetes
+        - iks_latest
       #      max-parallel: 1
       fail-fast: false
 
@@ -44,7 +44,7 @@ jobs:
 
       - name: Verify destroy on ${{ matrix.platform }}
         uses: ibm-garage-cloud/action-module-verify-destroy@main
-#        if: ${{ always() }}
+        if: ${{ always() }}
         with:
           clusterId: ${{ matrix.platform }}
         env:
