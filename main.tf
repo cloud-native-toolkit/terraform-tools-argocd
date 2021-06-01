@@ -190,56 +190,56 @@ resource "helm_release" "argocd-config" {
   }
 }
 
-resource "null_resource" "delete-solsa-helm" {
-  provisioner "local-exec" {
-    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.solsa.v1 || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
-
-resource "helm_release" "solsa" {
-  depends_on = [null_resource.argocd-instance, null_resource.delete-solsa-helm]
-
-  name         = "solsa"
-  chart        = "${path.module}/charts/solsa-cm"
-  namespace    = local.app_namespace
-  force_update = true
-
-  set {
-    name  = "ingress.subdomain"
-    value = var.ingress_subdomain
-  }
-
-  set {
-    name  = "ingress.tlssecret"
-    value = local.tls_secret_name
-  }
-}
-
-resource "null_resource" "install-solsa-plugin" {
-  depends_on = [helm_release.solsa]
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/patch-solsa.sh ${local.app_namespace} ${local.name}"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
-
-resource "null_resource" "install-key-protect-plugin" {
-  depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/install-key-protect-plugin.sh ${local.app_namespace} ${local.name}"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-      TMP_DIR    = local.tmp_dir
-    }
-  }
-}
+//resource "null_resource" "delete-solsa-helm" {
+//  provisioner "local-exec" {
+//    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.solsa.v1 || exit 0"
+//
+//    environment = {
+//      KUBECONFIG = var.cluster_config_file
+//    }
+//  }
+//}
+//
+//resource "helm_release" "solsa" {
+//  depends_on = [null_resource.argocd-instance, null_resource.delete-solsa-helm]
+//
+//  name         = "solsa"
+//  chart        = "${path.module}/charts/solsa-cm"
+//  namespace    = local.app_namespace
+//  force_update = true
+//
+//  set {
+//    name  = "ingress.subdomain"
+//    value = var.ingress_subdomain
+//  }
+//
+//  set {
+//    name  = "ingress.tlssecret"
+//    value = local.tls_secret_name
+//  }
+//}
+//
+//resource "null_resource" "install-solsa-plugin" {
+//  depends_on = [helm_release.solsa]
+//
+//  provisioner "local-exec" {
+//    command = "${path.module}/scripts/patch-solsa.sh ${local.app_namespace} ${local.name}"
+//
+//    environment = {
+//      KUBECONFIG = var.cluster_config_file
+//    }
+//  }
+//}
+//
+//resource "null_resource" "install-key-protect-plugin" {
+//  depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
+//
+//  provisioner "local-exec" {
+//    command = "${path.module}/scripts/install-key-protect-plugin.sh ${local.app_namespace} ${local.name}"
+//
+//    environment = {
+//      KUBECONFIG = var.cluster_config_file
+//      TMP_DIR    = local.tmp_dir
+//    }
+//  }
+//}
