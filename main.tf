@@ -4,7 +4,7 @@ locals {
   name              = "argocd-cluster"
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
-  version_re        = regex("^4.([0-9]+)", local.cluster_version)[0]
+  version_re        = var.cluster_type == "ocp4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   app_namespace     = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9" ? "openshift-gitops" : var.app_namespace
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
   grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
