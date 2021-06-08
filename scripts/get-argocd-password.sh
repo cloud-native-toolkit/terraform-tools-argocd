@@ -12,6 +12,8 @@ until kubectl get secret argocd-secret -n "${NAMESPACE}" 1> /dev/null 2> /dev/nu
 
   count=$((count + 1))
   echo "Waiting for secret ${NAMESPACE}/argocd-secret"
+  kubectl get all -n "${NAMESPACE}"
+  kubectl get secret -n "${NAMESPACE}"
   sleep 30
 done
 
