@@ -46,7 +46,7 @@ resource helm_release argocd {
 
   name         = "argocd"
   chart        = "${path.module}/charts/argocd"
-  namespace    = local.app_namespace
+  namespace    = var.app_namespace
   force_update = true
   replace      = true
 
