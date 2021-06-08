@@ -7,8 +7,8 @@ locals {
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
-  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
+  host              = "${local.name}-${local.app_namespace}.${var.ingress_subdomain}"
+  grpc_host         = "${local.name}-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
@@ -90,6 +90,21 @@ resource helm_release argocd {
   namespace    = var.app_namespace
   force_update = true
   replace      = true
+
+  set {
+    name = "global.ingressSubdomain"
+    value = var.ingress_subdomain
+  }
+
+  set {
+    name = "global.tlsSecretName"
+    value = local.tls_secret_name
+  }
+
+  set {
+    name = "global.clusterType"
+    value = var.cluster_type
+  }
 
   set {
     name = "openshift-gitops.enabled"
