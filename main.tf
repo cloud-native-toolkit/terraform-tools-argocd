@@ -33,7 +33,7 @@ data local_file cluster_version {
 
 resource null_resource delete_argocd_helm {
   provisioner "local-exec" {
-    command = "kubectl delete secret sh.helm.release.v1.argocd.v1 -n ${local.app_namespace} || exit 0"
+    command = "kubectl delete secret sh.helm.release.v1.argocd.v1 -n ${var.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -104,7 +104,7 @@ resource "null_resource" "delete_argocd_config_helm" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd.v1 || exit 0"
+    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
