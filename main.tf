@@ -4,10 +4,11 @@ locals {
   name              = "argocd-cluster"
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
-  version_re        = var.cluster_type == "ocp4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
-  app_namespace     = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9" ? "openshift-gitops" : var.app_namespace
-  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
+  version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
+  openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
+  app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
+  host              = "${local.name}-${local.app_namespace}.${var.ingress_subdomain}"
+  grpc_host         = "${local.name}-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
@@ -30,72 +31,18 @@ data local_file cluster_version {
   filename = local.version_file
 }
 
-resource "null_resource" "argocd-subscription" {
-  depends_on = [null_resource.cluster_version]
-
-  triggers = {
-    kubeconfig = var.cluster_config_file
-    namespace  = local.app_namespace
-  }
-
+resource null_resource print_version {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-subscription.sh ${var.cluster_type} ${self.triggers.namespace} ${var.olm_namespace} ${local.cluster_version}"
-
-    environment = {
-      TMP_DIR    = local.tmp_dir
-      KUBECONFIG = self.triggers.kubeconfig
-    }
+    command = "echo 'Cluster version: ${local.version_re}'"
   }
-
   provisioner "local-exec" {
-    when = destroy
-
-    command = "${path.module}/scripts/destroy-subscription.sh ${self.triggers.namespace}"
-
-    environment = {
-      KUBECONFIG = self.triggers.kubeconfig
-    }
+    command = "echo 'OpenShift GitOps: ${local.openshift_gitops}'"
   }
 }
 
-resource "null_resource" "argocd-instance" {
-  depends_on = [null_resource.argocd-subscription]
-
-  triggers = {
-    kubeconfig = var.cluster_config_file
-    namespace  = local.app_namespace
-    name       = local.name
-  }
-
+resource null_resource delete_argocd_helm {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-instance.sh '${var.cluster_type}' '${self.triggers.namespace}' '${var.ingress_subdomain}' '${self.triggers.name}' '${local.cluster_version}'"
-
-    environment = {
-      KUBECONFIG    = self.triggers.kubeconfig
-      PASSWORD_FILE = local.password_file
-    }
-  }
-
-  provisioner "local-exec" {
-    when = destroy
-
-    command = "${path.module}/scripts/destroy-instance.sh ${self.triggers.namespace} ${self.triggers.name}"
-
-    environment = {
-      KUBECONFIG    = self.triggers.kubeconfig
-    }
-  }
-}
-
-data "local_file" "argocd-password" {
-  depends_on = [null_resource.argocd-instance]
-
-  filename = local.password_file
-}
-
-resource "null_resource" "delete-rbac" {
-  provisioner "local-exec" {
-    command = "kubectl delete clusterrole/argocd-application-controller || kubectl delete clusterrolebinding/argocd-application-controller || kubectl delete clusterrole,clusterrolebinding -l app=argocd || exit 0"
+    command = "kubectl delete sa job-argocd -n ${local.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -103,7 +50,31 @@ resource "null_resource" "delete-rbac" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.argocd-rbac.v1 || exit 0"
+    command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl delete sa job-openshift-gitops-operator -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl delete job job-openshift-gitops-operator -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl delete secret sh.helm.release.v1.argocd.v1 -n ${var.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -111,23 +82,75 @@ resource "null_resource" "delete-rbac" {
   }
 }
 
-resource "helm_release" "argocd-rbac" {
-  depends_on = [null_resource.argocd-instance, null_resource.delete-rbac]
+resource helm_release argocd {
+  depends_on = [null_resource.delete_argocd_helm]
 
-  name         = "argocd-rbac"
-  repository   = "https://charts.cloudnativetoolkit.dev"
-  chart        = "argocd-config"
-  namespace    = local.app_namespace
+  name         = "argocd"
+  chart        = "${path.module}/charts/argocd"
+  namespace    = var.app_namespace
   force_update = true
   replace      = true
 
   set {
-    name  = "controllerRbac"
+    name = "global.ingressSubdomain"
+    value = var.ingress_subdomain
+  }
+
+  set {
+    name = "global.tlsSecretName"
+    value = local.tls_secret_name
+  }
+
+  set {
+    name = "global.clusterType"
+    value = var.cluster_type
+  }
+
+  set {
+    name = "openshift-gitops.enabled"
+    value = local.openshift_gitops
+  }
+
+  set {
+    name = "argocd-operator.enabled"
+    value = !local.openshift_gitops
+  }
+
+  set {
+    name = "argocd-operator.controllerRbac"
     value = true
   }
 }
 
-resource "null_resource" "delete-argocd-helm" {
+resource null_resource get_argocd_password {
+  depends_on = [helm_release.argocd]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file}"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
+data local_file argocd_password {
+  depends_on = [null_resource.get_argocd_password]
+
+  filename = local.password_file
+}
+
+resource null_resource clean_up_instance {
+  depends_on = [helm_release.argocd]
+
+  provisioner "local-exec" {
+    when = destroy
+
+    command = "echo 'Clean up instance'"
+  }
+}
+
+resource "null_resource" "delete_argocd_config_helm" {
   provisioner "local-exec" {
     command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
 
@@ -137,7 +160,7 @@ resource "null_resource" "delete-argocd-helm" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.argocd.v1 || exit 0"
+    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -146,12 +169,12 @@ resource "null_resource" "delete-argocd-helm" {
 }
 
 resource "helm_release" "argocd-config" {
-  depends_on = [null_resource.argocd-instance, null_resource.delete-argocd-helm]
+  depends_on = [null_resource.clean_up_instance, null_resource.delete_argocd_config_helm]
 
-  name         = "argocd"
+  name         = "argocd-config"
   repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "tool-config"
-  namespace    = local.app_namespace
+  namespace    = var.app_namespace
   force_update = true
 
   set {
@@ -176,7 +199,7 @@ resource "helm_release" "argocd-config" {
 
   set_sensitive {
     name  = "password"
-    value = data.local_file.argocd-password.content
+    value = data.local_file.argocd_password.content
   }
 
   set {
