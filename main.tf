@@ -99,7 +99,7 @@ resource "null_resource" "delete_argocd_config_helm" {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.argocd.v1 || exit 0"
+    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd.v1 || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -113,7 +113,7 @@ resource "helm_release" "argocd-config" {
   name         = "argocd"
   repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "tool-config"
-  namespace    = local.app_namespace
+  namespace    = var.app_namespace
   force_update = true
 
   set {
