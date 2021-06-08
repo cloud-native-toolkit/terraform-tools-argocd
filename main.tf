@@ -5,8 +5,8 @@ locals {
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
-  openshift_gitops  = local.version_re == "4.6" || local.version_re == "4.7"
-  app_namespace     = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9" ? "openshift-gitops" : var.app_namespace
+  openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
+  app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
   grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
@@ -33,7 +33,7 @@ data local_file cluster_version {
 
 resource null_resource print_version {
   provisioner "local-exec" {
-    command = "echo 'Cluster version: ${local.version_re}"
+    command = "echo 'Cluster version: ${local.version_re}'"
   }
   provisioner "local-exec" {
     command = "echo 'OpenShift GitOps: ${local.openshift_gitops}'"
