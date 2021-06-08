@@ -42,7 +42,23 @@ resource null_resource print_version {
 
 resource null_resource delete_argocd_helm {
   provisioner "local-exec" {
+    command = "kubectl delete sa job-argocd -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+
+  provisioner "local-exec" {
     command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "kubectl delete sa job-openshift-gitops-operator -n ${local.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
