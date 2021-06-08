@@ -110,7 +110,7 @@ resource "null_resource" "delete_argocd_config_helm" {
 resource "helm_release" "argocd-config" {
   depends_on = [null_resource.clean_up_instance, null_resource.delete_argocd_config_helm]
 
-  name         = "argocd"
+  name         = "argocd-config"
   repository   = "https://charts.cloudnativetoolkit.dev"
   chart        = "tool-config"
   namespace    = var.app_namespace
