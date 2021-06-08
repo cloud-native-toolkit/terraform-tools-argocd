@@ -59,6 +59,11 @@ resource helm_release argocd {
     name = "argocd-operator.enabled"
     value = !local.openshift_gitops
   }
+
+  set {
+    name = "argocd-operator.controllerRbac"
+    value = true
+  }
 }
 
 resource null_resource get_argocd_password {
