@@ -31,7 +31,19 @@ data local_file cluster_version {
   filename = local.version_file
 }
 
+resource null_resource delete_argocd_helm {
+  provisioner "local-exec" {
+    command = "kubectl delete secret sh.helm.release.v1.argocd.v1 -n ${local.app_namespace} || exit 0"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource helm_release argocd {
+  depends_on = [null_resource.delete_argocd_helm]
+
   name         = "argocd"
   chart        = "${path.module}/charts/argocd"
   namespace    = local.app_namespace
@@ -77,7 +89,7 @@ resource null_resource clean_up_instance {
   }
 }
 
-resource "null_resource" "delete-argocd-helm" {
+resource "null_resource" "delete_argocd_config_helm" {
   provisioner "local-exec" {
     command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
 
@@ -96,7 +108,7 @@ resource "null_resource" "delete-argocd-helm" {
 }
 
 resource "helm_release" "argocd-config" {
-  depends_on = [null_resource.clean_up_instance, null_resource.delete-argocd-helm]
+  depends_on = [null_resource.clean_up_instance, null_resource.delete_argocd_config_helm]
 
   name         = "argocd"
   repository   = "https://charts.cloudnativetoolkit.dev"
