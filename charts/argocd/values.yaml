@@ -1,0 +1,4 @@
+openshift-gitops:
+  enabled: true
+argocd-operator:
+  enabled: false

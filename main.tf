@@ -31,30 +31,26 @@ data local_file cluster_version {
   filename = local.version_file
 }
 
-resource helm_release openshift_gitops {
-  count = local.openshift_gitops ? 1 : 0
-
-  name         = "openshift-gitops"
-  repository   = "https://charts.cloudnativetoolkit.dev"
-  chart        = "openshift-gitops"
-  namespace    = "openshift-operators"
-  force_update = true
-  replace      = true
-}
-
-resource helm_release argocd_operator {
-  count = !local.openshift_gitops ? 1 : 0
-
-  name         = "argocd-operator"
-  repository   = "https://charts.cloudnativetoolkit.dev"
-  chart        = "argocd-operator"
+resource helm_release argocd {
+  name         = "argocd"
+  chart        = "${path.module}/charts/argocd"
   namespace    = local.app_namespace
   force_update = true
   replace      = true
+
+  set {
+    name = "openshift-gitops.enabled"
+    value = local.openshift_gitops
+  }
+
+  set {
+    name = "argocd-operator.enabled"
+    value = !local.openshift_gitops
+  }
 }
 
 resource null_resource get_argocd_password {
-  depends_on = [helm_release.argocd_operator, helm_release.openshift_gitops]
+  depends_on = [helm_release.argocd]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file}"
@@ -72,7 +68,7 @@ data local_file argocd_password {
 }
 
 resource null_resource clean_up_instance {
-  depends_on = [helm_release.openshift_gitops, helm_release.argocd_operator]
+  depends_on = [helm_release.argocd]
 
   provisioner "local-exec" {
     when = destroy
