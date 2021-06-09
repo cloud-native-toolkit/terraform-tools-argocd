@@ -122,6 +122,12 @@ resource helm_release argocd {
   }
 }
 
+resource null_resource print_argocd_manifest {
+  provisioner "local-exec" {
+    command = "echo '${helm_release.argocd.manifest}'"
+  }
+}
+
 resource null_resource get_argocd_password {
   depends_on = [helm_release.argocd]
 
