@@ -66,7 +66,7 @@ resource null_resource delete_argocd_helm {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete job job-openshift-gitops-operator -n ${local.app_namespace} || exit 0"
+    command = "kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
