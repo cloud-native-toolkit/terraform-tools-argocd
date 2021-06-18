@@ -15,3 +15,9 @@ output "provision_tekton" {
   value       = !local.openshift_gitops
   depends_on  = [helm_release.argocd-config]
 }
+
+output "namespace" {
+  description = "The namespace where the ArgoCD instance has been provisioned"
+  value       = local.app_namespace
+  depends_on  = [helm_release.argocd-config]
+}
