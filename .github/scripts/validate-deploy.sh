@@ -14,6 +14,13 @@ CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" 
 TOOLS_NAMESPACE=$(cat .namespace)
 NAMESPACE=$(cat .argo-namespace)
 ARGO_HOST=$(cat .argo-host)
+ARGO_USERNAME=$(cat .argo-username)
+ARGO_PASSWORD=$(cat .argo-password)
+
+if [[ -z "${ARGOCD_HOST}" ]] || [[ -z "${ARGOCD_USERNAME}" ]] || [[ -z "${ARGOCD_PASSWORD}" ]]; then
+  echo "ARGOCD_HOST, ARGOCD_USERNAME or ARGOCD_PASSWORD not provided (${ARGOCD_HOST}, ${ARGO_USERNAME}, ${ARGOCD_PASSWORD})"
+  exit 1
+fi
 
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
@@ -52,5 +59,17 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
     exit 1
   fi
 fi
+
+ARGOCD=$(command -v argocd || command -v ./argocd)
+
+if [[ -n "${ARGOCD}" ]]; then
+  VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+  curl -sSL -o ./argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+  chmod +x ./argocd
+  ARGOCD="$(pwd -P)/argocd"
+fi
+
+echo "Logging in to argocd: ${ARGO_HOST}"
+${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure || exit 1
 
 exit 0
