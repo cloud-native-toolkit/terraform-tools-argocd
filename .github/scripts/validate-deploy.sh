@@ -11,10 +11,25 @@ export KUBECONFIG
 
 CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" | sed 's/"//g')
 
+echo "listing directory contents"
+ls -A
+
 TOOLS_NAMESPACE=$(cat .namespace)
 NAMESPACE=$(cat .argo-namespace)
+
+echo -n "Argo host: "
+cat .argo-host
+echo ""
 ARGO_HOST=$(cat .argo-host)
+
+echo -n "Argo username: "
+cat .argo-username
+echo ""
 ARGO_USERNAME=$(cat .argo-username)
+
+echo -n "Argo password: "
+cat .argo-password
+echo ""
 ARGO_PASSWORD=$(cat .argo-password)
 
 if [[ -z "${ARGOCD_HOST}" ]] || [[ -z "${ARGOCD_USERNAME}" ]] || [[ -z "${ARGOCD_PASSWORD}" ]]; then
