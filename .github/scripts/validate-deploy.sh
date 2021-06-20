@@ -17,23 +17,13 @@ ls -A
 TOOLS_NAMESPACE=$(cat .namespace)
 NAMESPACE=$(cat .argo-namespace)
 
-echo -n "Argo host: "
-cat .argo-host
-echo ""
+
 ARGO_HOST=$(cat .argo-host)
-
-echo -n "Argo username: "
-cat .argo-username
-echo ""
 ARGO_USERNAME=$(cat .argo-username)
-
-echo -n "Argo password: "
-cat .argo-password
-echo ""
 ARGO_PASSWORD=$(cat .argo-password)
 
-if [[ -z "${ARGOCD_HOST}" ]] || [[ -z "${ARGOCD_USERNAME}" ]] || [[ -z "${ARGOCD_PASSWORD}" ]]; then
-  echo "ARGOCD_HOST, ARGOCD_USERNAME or ARGOCD_PASSWORD not provided (${ARGOCD_HOST}, ${ARGO_USERNAME}, ${ARGOCD_PASSWORD})"
+if [[ -z "${ARGO_HOST}" ]] || [[ -z "${ARGO_USERNAME}" ]] || [[ -z "${ARGO_PASSWORD}" ]]; then
+  echo "ARGO_HOST, ARGO_USERNAME or ARGO_PASSWORD not provided (${ARGO_HOST}, ${ARGO_USERNAME}, ${ARGO_PASSWORD})"
   exit 1
 fi
 
