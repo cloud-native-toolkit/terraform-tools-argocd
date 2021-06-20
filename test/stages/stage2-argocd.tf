@@ -9,3 +9,18 @@ module "dev_tools_argocd" {
   app_namespace       = module.dev_capture_tools_state.namespace
   name                = "argocd"
 }
+
+resource "null_resource" "output_values" {
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_capture_tools_state.namespace}' > .namespace"
+  }
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_tools_argocd.namespace}' > .argo-namespace"
+  }
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_tools_argocd.ingress_host}' > .argo-host"
+  }
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_tools_argocd.ingress_url}' > .argo-url"
+  }
+}
