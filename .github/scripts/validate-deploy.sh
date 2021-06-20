@@ -17,7 +17,6 @@ ls -A
 TOOLS_NAMESPACE=$(cat .namespace)
 NAMESPACE=$(cat .argo-namespace)
 
-
 ARGO_HOST=$(cat .argo-host)
 ARGO_USERNAME=$(cat .argo-username)
 ARGO_PASSWORD=$(cat .argo-password)
@@ -26,6 +25,8 @@ if [[ -z "${ARGO_HOST}" ]] || [[ -z "${ARGO_USERNAME}" ]] || [[ -z "${ARGO_PASSW
   echo "ARGO_HOST, ARGO_USERNAME or ARGO_PASSWORD not provided (${ARGO_HOST}, ${ARGO_USERNAME}, ${ARGO_PASSWORD})"
   exit 1
 fi
+
+ARGOCD=$(command -v argocd || command -v ./argocd)
 
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
@@ -57,6 +58,8 @@ echo "${ENDPOINTS}" | while read endpoint; do
   fi
 done
 
+echo "Endpoints validated"
+
 if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   echo "Validating consolelink"
   if [[ $(kubectl get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
@@ -64,8 +67,6 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
     exit 1
   fi
 fi
-
-ARGOCD=$(command -v argocd || command -v ./argocd)
 
 if [[ -n "${ARGOCD}" ]]; then
   VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
