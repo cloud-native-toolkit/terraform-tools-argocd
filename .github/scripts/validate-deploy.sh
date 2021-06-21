@@ -76,8 +76,8 @@ if [[ -z "${ARGOCD}" ]]; then
 fi
 
 echo "Logging in to argocd: ${ARGO_HOST}"
-${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web
 ${ARGOCD} login "cluster-openshift-gitops.toolkit-dev-ocp47-2ab66b053c14936810608de9a1deac9c-0000.us-east.containers.appdomain.cloud" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web
+${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web
 
 echo "Validating argocd-access secret"
 SECRET_PASSWORD=$(kubectl get secret -n "${TOOLS_NAMESPACE}" argocd-access -o jsonpath='{.data.ARGOCD_PASSWORD}' | base64 -d)
