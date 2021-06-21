@@ -7,8 +7,8 @@ locals {
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
-  host              = "${local.name}-${local.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${local.name}-grpc-${local.app_namespace}.${var.ingress_subdomain}"
+  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
+  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
