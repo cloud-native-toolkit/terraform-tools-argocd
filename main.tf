@@ -112,6 +112,11 @@ resource helm_release argocd {
   }
 
   set {
+    name = "openshift-gitops.instance.dex.openShiftOAuth"
+    value = false
+  }
+
+  set {
     name = "argocd-operator.enabled"
     value = !local.openshift_gitops
   }
@@ -119,11 +124,6 @@ resource helm_release argocd {
   set {
     name = "argocd-operator.controllerRbac"
     value = true
-  }
-
-  set {
-    name = "argocd-operator.instance.dex.openShiftOAuth"
-    value = false
   }
 }
 
