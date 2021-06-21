@@ -84,7 +84,11 @@ TEST_HOST="argocd-cluster-server-openshift-gitops.toolkit-dev-ocp47-2ab66b053c14
 echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
 ${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web --loglevel debug
 
+echo "Pods:"
 oc get pods -n "${NAMESPACE}"
+
+echo "Secrets:"
+oc get secrets -n "${NAMESPACE}"
 
 echo "Validating argocd-access secret"
 SECRET_PASSWORD=$(kubectl get secret -n "${TOOLS_NAMESPACE}" argocd-access -o jsonpath='{.data.ARGOCD_PASSWORD}' | base64 -d)
