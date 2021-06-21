@@ -120,6 +120,11 @@ resource helm_release argocd {
     name = "argocd-operator.controllerRbac"
     value = true
   }
+
+  set {
+    name = "argocd-operator.instance.dex.openShiftOAuth"
+    value = false
+  }
 }
 
 resource null_resource print_argocd_manifest {
