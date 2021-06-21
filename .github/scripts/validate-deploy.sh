@@ -76,6 +76,14 @@ if [[ -z "${ARGOCD}" ]]; then
 fi
 
 echo "Logging in to argocd: ${ARGO_HOST}"
-${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure || exit 1
+${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web || exit 1
+
+echo "Validating argocd-access secret"
+SECRET_PASSWORD=$(kubectl get secret -n "${TOOLS_NAMESPACE}" argocd-access -o jsonpath='{.data.ARGOCD_PASSWORD}' | base64 -d)
+
+if [[ "${ARGO_PASSWORD}" != "${SECRET_PASSWORD}" ]]; then
+  echo "Password in secret does not match: ${SECRET_PASSWORD} != ${ARGO_PASSWORD}"
+  exit 1
+fi
 
 exit 0
