@@ -87,6 +87,12 @@ ${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_
 echo "Logging in to argocd: ${TEST_HOST} ${ARGO_PASSWORD}"
 ${ARGOCD} login "${TEST_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web --loglevel debug
 
+TOKEN=$(oc whoami -t)
+
+echo "Logging in to argocd: ${TEST_HOST} token"
+${ARGOCD} login "${TEST_HOST}" --auth-token "${TOKEN}" --insecure --grpc-web --loglevel debug
+
+
 oc get pods -n "${NAMESPACE}"
 
 echo "Validating argocd-access secret"
