@@ -23,4 +23,10 @@ resource "null_resource" "output_values" {
   provisioner "local-exec" {
     command = "echo -n '${module.dev_tools_argocd.ingress_url}' > .argo-url"
   }
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_tools_argocd.username}' > .argo-username"
+  }
+  provisioner "local-exec" {
+    command = "echo -n '${module.dev_tools_argocd.password}' > .argo-password"
+  }
 }

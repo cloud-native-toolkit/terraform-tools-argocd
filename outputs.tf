@@ -23,3 +23,16 @@ output "namespace" {
   value       = local.app_namespace
   depends_on  = [helm_release.argocd-config]
 }
+
+output "username" {
+  description = "The username of the default ArgoCD admin user"
+  value       = "admin"
+  depends_on  = [helm_release.argocd-config]
+}
+
+output "password" {
+  description = "The password of the default ArgoCD admin user"
+  value       = data.local_file.argocd_password.content
+  depends_on  = [helm_release.argocd-config]
+  sensitive   = true
+}
