@@ -136,6 +136,10 @@ resource null_resource print_argocd_manifest {
 resource null_resource get_argocd_password {
   depends_on = [helm_release.argocd]
 
+  triggers = {
+    always_run = timestamp()
+  }
+
   provisioner "local-exec" {
     command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file}"
 
