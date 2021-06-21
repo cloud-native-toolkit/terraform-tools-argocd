@@ -113,7 +113,7 @@ resource helm_release argocd {
 
   set {
     name = "openshift-gitops.instance.dex.openShiftOAuth"
-    value = false
+    value = true
   }
 
   set {
