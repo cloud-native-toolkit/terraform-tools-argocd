@@ -14,7 +14,7 @@ SECRET_NAME="argocd-cluster-cluster"
 
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
-  if [[ $count -eq 10 ]]; then
+  if [[ $count -eq 20 ]]; then
     echo "Timed out waiting for secret ${NAMESPACE}/${SECRET_NAME}"
     exit 1
   fi
