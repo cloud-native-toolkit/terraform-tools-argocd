@@ -85,10 +85,13 @@ echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
 ${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web --loglevel debug
 
 echo "Pods:"
-oc get pods -n "${NAMESPACE}"
+oc get pods -n "${NAMESPACE}" --show-labels
 
 echo "Secrets:"
 oc get secrets -n "${NAMESPACE}"
+
+echo "Contents of argocd-cluster-cluster"
+oc extract secret/argocd-cluster-cluster -n "${NAMESPACE}" --to=-
 
 echo "Validating argocd-access secret"
 SECRET_PASSWORD=$(kubectl get secret -n "${TOOLS_NAMESPACE}" argocd-access -o jsonpath='{.data.ARGOCD_PASSWORD}' | base64 -d)
