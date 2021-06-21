@@ -32,5 +32,15 @@ kubectl patch secret argocd-secret -n "${NAMESPACE}" \
     \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"
   }}"
 
+kubectl patch secret argocd-cluster-cluster -n "${NAMESPACE}" \
+  -p "{\"stringData\": {
+    \"admin.password\": \"${NEW_PASSWORD}\"
+  }}"
+
+kubectl delete pod -n "${NAMESPACE}" -l app.kubernetes.io/name=argocd-cluster-application-controller
+kubectl delete pod -n "${NAMESPACE}" -l app.kubernetes.io/name=argocd-cluster-redis
+kubectl delete pod -n "${NAMESPACE}" -l app.kubernetes.io/name=argocd-cluster-repo-server
+kubectl delete pod -n "${NAMESPACE}" -l app.kubernetes.io/name=argocd-cluster-server
+kubectl delete pod -n "${NAMESPACE}" -l app.kubernetes.io/name=cluster
+
 echo -n "${NEW_PASSWORD}" > "${OUTPUT_FILE}"
-#kubectl get secret argocd-secret -n "${NAMESPACE}" -o jsonpath='{ .data.admin\.password }' | base64 -d > "${OUTPUT_FILE}"

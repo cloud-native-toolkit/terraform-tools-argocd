@@ -75,30 +75,7 @@ if [[ -z "${ARGOCD}" ]]; then
   ARGOCD="$(pwd -P)/argocd"
 fi
 
-set +e
-
-TOKEN=$(oc whoami -t)
-
-TEST_HOST="argocd-cluster-server-openshift-gitops.toolkit-dev-ocp47-2ab66b053c14936810608de9a1deac9c-0000.us-east.containers.appdomain.cloud"
-
 echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
-${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web --loglevel debug
-
-echo "Pods:"
-oc get pods -n "${NAMESPACE}" --show-labels
-
-echo "Secrets:"
-oc get secrets -n "${NAMESPACE}"
-
-echo "Contents of argocd-cluster-cluster"
-oc extract secret/argocd-cluster-cluster -n "${NAMESPACE}" --to=-
-
-echo "Validating argocd-access secret"
-SECRET_PASSWORD=$(kubectl get secret -n "${TOOLS_NAMESPACE}" argocd-access -o jsonpath='{.data.ARGOCD_PASSWORD}' | base64 -d)
-
-if [[ "${ARGO_PASSWORD}" != "${SECRET_PASSWORD}" ]]; then
-  echo "Password in secret does not match: ${SECRET_PASSWORD} != ${ARGO_PASSWORD}"
-  exit 1
-fi
+${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web || exit 1
 
 exit 0
