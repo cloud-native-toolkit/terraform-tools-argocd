@@ -126,7 +126,7 @@ resource null_resource argocd_helm {
     namespace = var.app_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file = local.argocd_values
+    values_file = local.argocd_values_file
     kubeconfig = var.cluster_config_file
   }
 
