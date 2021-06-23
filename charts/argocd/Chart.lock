@@ -1,9 +1,9 @@
 dependencies:
 - name: openshift-gitops
   repository: https://charts.cloudnativetoolkit.dev/
-  version: 0.5.0
+  version: 0.6.0
 - name: argocd-operator
   repository: https://charts.cloudnativetoolkit.dev/
   version: 0.4.0
-digest: sha256:27134caf9ea9859107dfb44ea42b7c90135c6f6c2e7e2283684058cbf5649ad8
-generated: "2021-06-20T23:19:45.741655-05:00"
+digest: sha256:97edd8986719478167bdfa6759b840dd7a76ff1f43b2a9dba2753987622dd26b
+generated: "2021-06-23T07:23:49.287519-05:00"
