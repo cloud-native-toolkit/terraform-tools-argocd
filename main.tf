@@ -64,13 +64,10 @@ data local_file cluster_version {
 }
 
 resource null_resource print_version {
-  triggers = {
-    always_run = timestamp()
-  }
-
   provisioner "local-exec" {
     command = "echo 'Cluster version: ${local.version_re}'"
   }
+
   provisioner "local-exec" {
     command = "echo 'OpenShift GitOps: ${local.openshift_gitops}'"
   }
@@ -94,15 +91,18 @@ resource null_resource delete_argocd_helm {
   }
 }
 
-resource local_file argocd_values {
-  depends_on = [null_resource.print_version]
+resource null_resource argocd_values {
+  triggers = {
+    always_run = timestamp()
+  }
 
-  filename = local.argocd_values_file
-  content  = yamlencode(local.argocd_values)
+  provisioner "local-exec" {
+    command = "mkdir -p $(dirname ${local.argocd_values_file}) && echo '${yamlencode(local.argocd_values)}' > ${local.argocd_values_file}"
+  }
 }
 
 resource null_resource argocd_helm {
-  depends_on = [null_resource.delete_argocd_helm, local_file.argocd_values]
+  depends_on = [null_resource.delete_argocd_helm, null_resource.argocd_values]
 
   triggers = {
     namespace = var.app_namespace
@@ -171,15 +171,18 @@ resource "null_resource" "delete_argocd_config_helm" {
   }
 }
 
-resource local_file argocd_config_values {
-  depends_on = [null_resource.print_version]
+resource null_resource argocd_config_values {
+  triggers = {
+    always_run = timestamp()
+  }
 
-  filename = local.argocd_config_values_file
-  content = yamlencode(local.argocd_config_values)
+  provisioner "local-exec" {
+    command = "mkdir -p $(dirname ${local.argocd_config_values_file}) && echo '${yamlencode(local.argocd_config_values)}' > ${local.argocd_config_values_file}"
+  }
 }
 
 resource null_resource argocd-config {
-  depends_on = [null_resource.delete_argocd_config_helm, local_file.argocd_config_values]
+  depends_on = [null_resource.delete_argocd_config_helm, null_resource.argocd_config_values]
 
   triggers = {
     namespace = var.app_namespace
