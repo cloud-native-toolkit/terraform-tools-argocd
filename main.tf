@@ -13,6 +13,38 @@ locals {
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
   tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
+  argocd_values       = {
+    global = {
+      ingressSubdomain = var.ingress_subdomain
+      tlsSecretName = local.tls_secret_name
+      clusterType = var.cluster_type
+    }
+    openshift-gitops = {
+      enabled = local.openshift_gitops
+      instance = {
+        dex = {
+          openShiftOAuth = true
+        }
+      }
+    }
+    argocd-operator = {
+      enabled = !local.openshift_gitops
+      controllerRbac = true
+    }
+  }
+  argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
+  argocd_config_values = {
+    name = "ArgoCD"
+    url = local.url_endpoint
+    otherConfig = {
+      grpc_url = var.cluster_type == "kubernetes" ? local.grpc_url_endpoint : ""
+    }
+    username = "admin"
+    password = data.local_file.argocd_password.content
+    applicationMenu = var.cluster_type == "ocp4"
+    ingressSubdomain = var.ingress_subdomain
+  }
+  argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
 }
 
 resource null_resource cluster_version {
@@ -82,59 +114,43 @@ resource null_resource delete_argocd_helm {
   }
 }
 
-resource helm_release argocd {
-  depends_on = [null_resource.delete_argocd_helm]
-
-  name         = "argocd"
-  chart        = "${path.module}/charts/argocd"
-  namespace    = var.app_namespace
-  force_update = true
-  replace      = true
-
-  set {
-    name = "global.ingressSubdomain"
-    value = var.ingress_subdomain
-  }
-
-  set {
-    name = "global.tlsSecretName"
-    value = local.tls_secret_name
-  }
-
-  set {
-    name = "global.clusterType"
-    value = var.cluster_type
-  }
-
-  set {
-    name = "openshift-gitops.enabled"
-    value = local.openshift_gitops
-  }
-
-  set {
-    name = "openshift-gitops.instance.dex.openShiftOAuth"
-    value = true
-  }
-
-  set {
-    name = "argocd-operator.enabled"
-    value = !local.openshift_gitops
-  }
-
-  set {
-    name = "argocd-operator.controllerRbac"
-    value = true
-  }
+resource local_file argocd_values {
+  filename = local.argocd_values_file
+  content  = yamlencode(local.argocd_values)
 }
 
-resource null_resource print_argocd_manifest {
+resource null_resource argocd_helm {
+  depends_on = [null_resource.delete_argocd_helm, local_file.argocd_values]
+
+  triggers = {
+    namespace = var.app_namespace
+    name = "argocd"
+    chart = "${path.module}/charts/argocd"
+    values_file = local.argocd_values
+    kubeconfig = var.cluster_config_file
+  }
+
   provisioner "local-exec" {
-    command = "echo '${helm_release.argocd.manifest}'"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+    }
+  }
+
+  provisioner "local-exec" {
+    when = destroy
+
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+    }
   }
 }
 
 resource null_resource get_argocd_password {
-  depends_on = [helm_release.argocd]
+  depends_on = [null_resource.argocd_helm]
 
   triggers = {
     always_run = timestamp()
@@ -155,16 +171,6 @@ data local_file argocd_password {
   filename = local.password_file
 }
 
-resource null_resource clean_up_instance {
-  depends_on = [helm_release.argocd]
-
-  provisioner "local-exec" {
-    when = destroy
-
-    command = "echo 'Clean up instance'"
-  }
-}
-
 resource "null_resource" "delete_argocd_config_helm" {
   provisioner "local-exec" {
     command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
@@ -183,48 +189,41 @@ resource "null_resource" "delete_argocd_config_helm" {
   }
 }
 
-resource "helm_release" "argocd-config" {
-  depends_on = [null_resource.clean_up_instance, null_resource.delete_argocd_config_helm]
+resource local_file argocd_config_values {
+  filename = local.argocd_config_values_file
+  content = yamlencode(local.argocd_config_values)
+}
 
-  name         = "argocd-config"
-  repository   = "https://charts.cloudnativetoolkit.dev"
-  chart        = "tool-config"
-  namespace    = var.app_namespace
-  force_update = true
+resource null_resource argocd-config {
+  depends_on = [null_resource.delete_argocd_config_helm, local_file.argocd_config_values]
 
-  set {
-    name  = "name"
-    value = "ArgoCD"
+  triggers = {
+    namespace = var.app_namespace
+    name = "argocd-config"
+    chart = "tool-config"
+    repository = "https://charts.cloudnativetoolkit.dev"
+    values_file = local.argocd_config_values_file
+    kubeconfig = var.cluster_config_file
   }
 
-  set {
-    name  = "url"
-    value = local.url_endpoint
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+      REPO = self.triggers.repository
+    }
   }
 
-  set {
-    name  = "otherConfig.grpc_url"
-    value = var.cluster_type == "kubernetes" ? local.grpc_url_endpoint : ""
-  }
+  provisioner "local-exec" {
+    when = destroy
 
-  set {
-    name  = "username"
-    value = "admin"
-  }
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
 
-  set_sensitive {
-    name  = "password"
-    value = data.local_file.argocd_password.content
-  }
-
-  set {
-    name  = "applicationMenu"
-    value = var.cluster_type == "ocp4"
-  }
-
-  set {
-    name  = "ingressSubdomain"
-    value = var.ingress_subdomain
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+      REPO = self.triggers.repository
+    }
   }
 }
 
