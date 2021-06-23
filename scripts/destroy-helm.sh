@@ -31,4 +31,4 @@ if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete --validate=false -f -
+${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl delete -f -
