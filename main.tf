@@ -64,6 +64,10 @@ data local_file cluster_version {
 }
 
 resource null_resource print_version {
+  triggers = {
+    always_run = timestamp()
+  }
+
   provisioner "local-exec" {
     command = "echo 'Cluster version: ${local.version_re}'"
   }
@@ -74,23 +78,7 @@ resource null_resource print_version {
 
 resource null_resource delete_argocd_helm {
   provisioner "local-exec" {
-    command = "kubectl delete sa job-argocd -n ${local.app_namespace} || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-
-  provisioner "local-exec" {
     command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-
-  provisioner "local-exec" {
-    command = "kubectl delete sa job-openshift-gitops-operator -n ${local.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -104,17 +92,11 @@ resource null_resource delete_argocd_helm {
       KUBECONFIG = var.cluster_config_file
     }
   }
-
-  provisioner "local-exec" {
-    command = "kubectl delete secret sh.helm.release.v1.argocd.v1 -n ${var.app_namespace} || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
 }
 
 resource local_file argocd_values {
+  depends_on = [null_resource.print_version]
+
   filename = local.argocd_values_file
   content  = yamlencode(local.argocd_values)
 }
@@ -190,6 +172,8 @@ resource "null_resource" "delete_argocd_config_helm" {
 }
 
 resource local_file argocd_config_values {
+  depends_on = [null_resource.print_version]
+
   filename = local.argocd_config_values_file
   content = yamlencode(local.argocd_config_values)
 }
