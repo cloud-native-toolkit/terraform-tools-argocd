@@ -26,6 +26,9 @@ locals {
           openShiftOAuth = true
         }
       }
+      subscription = {
+        channel = local.version_re == "6" ? "preview" : "stable"
+      }
     }
     argocd-operator = {
       enabled = !local.openshift_gitops
