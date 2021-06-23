@@ -3,7 +3,15 @@
 NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
-VALUES_FILE="$4"
+
+if [[ -z "${TMP_DIR}" ]]; then
+  TMP_DIR="./tmp"
+fi
+mkdir -p "${TMP_DIR}"
+
+VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
+
+echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
 HELM=$(command -v helm || command -v ./bin/helm)
 

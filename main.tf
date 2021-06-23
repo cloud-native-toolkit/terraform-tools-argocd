@@ -91,42 +91,37 @@ resource null_resource delete_argocd_helm {
   }
 }
 
-resource null_resource argocd_values {
-  triggers = {
-    always_run = timestamp()
-  }
-
-  provisioner "local-exec" {
-    command = "mkdir -p $(dirname ${local.argocd_values_file}) && echo '${yamlencode(local.argocd_values)}' > ${local.argocd_values_file}"
-  }
-}
-
 resource null_resource argocd_helm {
-  depends_on = [null_resource.delete_argocd_helm, null_resource.argocd_values]
+  depends_on = [null_resource.delete_argocd_helm]
 
   triggers = {
     namespace = var.app_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file = local.argocd_values_file
+    values_file_content = yamlencode(local.argocd_values)
     kubeconfig = var.cluster_config_file
+    tmp_dir = local.tmp_dir
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
     }
   }
 
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
     }
   }
 }
@@ -171,45 +166,40 @@ resource "null_resource" "delete_argocd_config_helm" {
   }
 }
 
-resource null_resource argocd_config_values {
-  triggers = {
-    always_run = timestamp()
-  }
-
-  provisioner "local-exec" {
-    command = "mkdir -p $(dirname ${local.argocd_config_values_file}) && echo '${yamlencode(local.argocd_config_values)}' > ${local.argocd_config_values_file}"
-  }
-}
-
 resource null_resource argocd-config {
-  depends_on = [null_resource.delete_argocd_config_helm, null_resource.argocd_config_values]
+  depends_on = [null_resource.delete_argocd_config_helm]
 
   triggers = {
     namespace = var.app_namespace
     name = "argocd-config"
     chart = "tool-config"
     repository = "https://charts.cloudnativetoolkit.dev"
-    values_file = local.argocd_config_values_file
+    values_file_content = yamlencode(local.argocd_config_values)
     kubeconfig = var.cluster_config_file
+    tmp_dir = local.tmp_dir
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
       REPO = self.triggers.repository
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
     }
   }
 
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.values_file}"
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
       REPO = self.triggers.repository
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
     }
   }
 }
