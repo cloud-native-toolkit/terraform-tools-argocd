@@ -44,7 +44,7 @@ locals {
     }
     username = "admin"
     password = data.local_file.argocd_password.content
-    applicationMenu = var.cluster_type == "ocp4"
+    applicationMenu = var.cluster_type == "ocp4" && tonumber(local.version_re) < 7
     ingressSubdomain = var.ingress_subdomain
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
