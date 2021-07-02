@@ -24,6 +24,12 @@ output "namespace" {
   depends_on  = [null_resource.argocd-config]
 }
 
+output "service_account" {
+  description = "The name of the service account for the ArgoCD instance has been provisioned"
+  value       = local.service_account_name
+  depends_on  = [null_resource.argocd-config]
+}
+
 output "username" {
   description = "The username of the default ArgoCD admin user"
   value       = "admin"
