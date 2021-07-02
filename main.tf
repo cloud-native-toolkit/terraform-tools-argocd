@@ -48,6 +48,7 @@ locals {
     ingressSubdomain = var.ingress_subdomain
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
+  service_account_name = "${local.name}-argocd-application-controller"
 }
 
 resource null_resource cluster_version {
