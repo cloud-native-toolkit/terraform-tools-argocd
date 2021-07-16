@@ -9,20 +9,33 @@ if [[ -z "${TMP_DIR}" ]]; then
 fi
 mkdir -p "${TMP_DIR}"
 
+mkdir -p ./bin
+BIN_DIR=$(cd ./bin; pwd -P)
+
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
-HELM=$(command -v helm || command -v ./bin/helm)
+HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
 
 if [[ -z "${HELM}" ]]; then
-  curl -sLo helm.tar.gz https://get.helm.sh/helm-v3.6.1-linux-amd64.tar.gz
-  tar xzf helm.tar.gz
-  mkdir -p ./bin && mv ./linux-amd64/helm ./bin/helm
-  rm -rf linux-amd64
-  rm helm.tar.gz
+  curl -sLo helmx.tar.gz https://get.helm.sh/helm-v3.6.1-linux-amd64.tar.gz
 
-  HELM="$(cd ./bin; pwd -P)/helm"
+  HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
+
+  if [[ -z "${HELM}" ]]; then
+    mkdir helm.tmp && cd helm.tmp && tar xzf ../helmx.tar.gz
+
+    HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
+
+    if [[ -z "${HELM}" ]]; then
+      cp ./linux-amd64/helm "${BIN_DIR}/helm"
+
+      HELM="${BIN_DIR}/helm"
+    fi
+
+    cd .. && rm -rf helm.tmp && rm helmx.tar.gz
+  fi
 fi
 
 kubectl config set-context --current --namespace "${NAMESPACE}"
