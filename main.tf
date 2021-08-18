@@ -1,10 +1,10 @@
 
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
-  name              = "argocd-cluster"
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
+  name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
@@ -21,11 +21,7 @@ locals {
     }
     openshift-gitops = {
       enabled = local.openshift_gitops
-      instance = {
-        dex = {
-          openShiftOAuth = true
-        }
-      }
+      createInstance = false
       subscription = {
         channel = local.version_re == "6" ? "preview" : "stable"
       }
@@ -138,7 +134,7 @@ resource null_resource get_argocd_password {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file}"
+    command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file} ${local.version_re}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
