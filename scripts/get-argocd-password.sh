@@ -2,6 +2,7 @@
 
 NAMESPACE="$1"
 OUTPUT_FILE="$2"
+OCP_MINOR_VERSION="$3"
 
 if [[ -z "${OUTPUT_FILE}" ]]; then
   echo "OUTPUT_FILE is required"
@@ -10,7 +11,12 @@ fi
 
 mkdir -p "$(dirname "${OUTPUT_FILE}")"
 
-SECRET_NAME="argocd-cluster-cluster"
+# works with OCP 4.7+
+SECRET_NAME="openshift-gitops-cluster"
+
+if [[ "${OCP_MINOR_VERSION}" == "6" ]]; then
+  SECRET_NAME="argocd-cluster-cluster"
+fi
 
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
