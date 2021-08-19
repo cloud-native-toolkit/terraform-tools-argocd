@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         platform:
-        - ocp4_latest
+#        - ocp4_latest
         - ocp46
 #        - ocp45
 #      max-parallel: 1
