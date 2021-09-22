@@ -16,6 +16,7 @@ VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
 HELM=$(command -v "${BIN_DIR}/helm")
+echo "Helm: ${HELM}"
 
 kubectl config set-context --current --namespace "${NAMESPACE}"
 
