@@ -5,6 +5,13 @@ output "ingress_host" {
   sensitive   = true
 }
 
+output "service_host" {
+  description = "The host name of the in-cluster service for the Argo CD instance"
+  value       = local.service_host
+  depends_on  = [null_resource.argocd-config]
+  sensitive   = true
+}
+
 output "ingress_url" {
   description = "The ingress url for the Argo CD instance"
   value       = local.url_endpoint

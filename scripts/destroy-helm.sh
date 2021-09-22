@@ -13,17 +13,7 @@ VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
-HELM=$(command -v helm || command -v ./bin/helm)
-
-if [[ -z "${HELM}" ]]; then
-  curl -sLo helm.tar.gz https://get.helm.sh/helm-v3.6.1-linux-amd64.tar.gz
-  tar xzf helm.tar.gz
-  mkdir -p ./bin && mv ./linux-amd64/helm ./bin/helm
-  rm -rf linux-amd64
-  rm helm.tar.gz
-
-  HELM="$(cd ./bin; pwd -P)/helm"
-fi
+HELM=$(command -v "${BIN_DIR}/helm")
 
 kubectl config set-context --current --namespace "${NAMESPACE}"
 

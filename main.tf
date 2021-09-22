@@ -1,12 +1,14 @@
 
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
+  bin_dir           = module.setup_clis.bin_dir
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
+  service_host      = "argocd-cluster-server.${local.app_namespace}"
   host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
   grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
   url_endpoint      = "https://${local.host}"
@@ -45,6 +47,12 @@ locals {
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
   service_account_name = "${local.name}-argocd-application-controller"
+}
+
+module setup_clis {
+  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
+
+  clis = ["helm"]
 }
 
 resource null_resource cluster_version {
@@ -101,6 +109,7 @@ resource null_resource argocd_helm {
     values_file_content = yamlencode(local.argocd_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
+    bin_dir = local.bin_dir
   }
 
   provisioner "local-exec" {
@@ -110,6 +119,7 @@ resource null_resource argocd_helm {
       KUBECONFIG = self.triggers.kubeconfig
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 
@@ -122,6 +132,7 @@ resource null_resource argocd_helm {
       KUBECONFIG = self.triggers.kubeconfig
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 }
