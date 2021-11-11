@@ -136,7 +136,7 @@ resource null_resource wait-for-deployment {
   depends_on = [null_resource.argocd_helm]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-deployment.sh ${var.app_namespace}"
+    command = "${path.module}/scripts/wait-for-statefulset.sh ${var.app_namespace}"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
