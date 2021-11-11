@@ -132,6 +132,18 @@ resource null_resource argocd_helm {
   }
 }
 
+resource null_resource wait-for-deployment {
+  depends_on = [null_resource.argocd_helm]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/wait-for-deployment.sh ${var.app_namespace}"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource null_resource get_argocd_password {
   depends_on = [null_resource.argocd_helm]
 
@@ -154,26 +166,8 @@ data local_file argocd_password {
   filename = local.password_file
 }
 
-resource "null_resource" "delete_argocd_config_helm" {
-  provisioner "local-exec" {
-    command = "kubectl api-resources | grep -q consolelink && kubectl delete consolelink -l grouping=garage-cloud-native-toolkit -l app=argocd || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-
-  provisioner "local-exec" {
-    command = "kubectl delete -n ${var.app_namespace} secret sh.helm.release.v1.argocd-config.v1 || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
-
 resource null_resource argocd-config {
-  depends_on = [null_resource.delete_argocd_config_helm]
+  depends_on = [null_resource.argocd_helm]
 
   triggers = {
     namespace = var.app_namespace
