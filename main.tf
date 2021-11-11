@@ -1,6 +1,7 @@
 
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
+  bin_dir           = module.setup_clis.bin_dir
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   cluster_version   = data.local_file.cluster_version.content
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
@@ -34,13 +35,9 @@ locals {
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
   argocd_config_values = {
     name = "ArgoCD"
-    url = local.url_endpoint
-    otherConfig = {
-      grpc_url = var.cluster_type == "kubernetes" ? local.grpc_url_endpoint : ""
-    }
     username = "admin"
     password = data.local_file.argocd_password.content
-    applicationMenu = var.cluster_type == "ocp4" && tonumber(local.version_re) < 7
+    applicationMenu = !local.openshift_gitops
     ingressSubdomain = var.ingress_subdomain
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
@@ -55,6 +52,12 @@ resource null_resource cluster_version {
       KUBECONFIG = var.cluster_config_file
     }
   }
+}
+
+module setup_clis {
+  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
+
+  clis = ["helm"]
 }
 
 data local_file cluster_version {
@@ -101,6 +104,7 @@ resource null_resource argocd_helm {
     values_file_content = yamlencode(local.argocd_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
+    bin_dir = local.bin_dir
   }
 
   provisioner "local-exec" {
@@ -110,6 +114,7 @@ resource null_resource argocd_helm {
       KUBECONFIG = self.triggers.kubeconfig
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 
@@ -122,6 +127,7 @@ resource null_resource argocd_helm {
       KUBECONFIG = self.triggers.kubeconfig
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 }
@@ -177,6 +183,7 @@ resource null_resource argocd-config {
     values_file_content = yamlencode(local.argocd_config_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
+    bin_dir = local.bin_dir
   }
 
   provisioner "local-exec" {
@@ -187,6 +194,7 @@ resource null_resource argocd-config {
       REPO = self.triggers.repository
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 
@@ -200,6 +208,7 @@ resource null_resource argocd-config {
       REPO = self.triggers.repository
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
     }
   }
 }

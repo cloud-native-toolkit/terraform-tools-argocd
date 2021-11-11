@@ -9,6 +9,11 @@ if [[ -z "${TMP_DIR}" ]]; then
 fi
 mkdir -p "${TMP_DIR}"
 
+if [[ -z "${BIN_DIR}" ]]; then
+  mkdir -p ./bin
+  BIN_DIR=$(cd ./bin; pwd -P)
+fi
+
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
