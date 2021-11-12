@@ -49,10 +49,10 @@ else
   ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{"https://"}{.spec.host}{.spec.path}{"\n"}{end}')
 fi
 
-echo "Validating endpoints:"
+echo "Validating argo endpoints:"
 echo "${ENDPOINTS}"
 
-echo "${ENDPOINTS}" | while read endpoint; do
+echo ${ENDPOINTS} | while read endpoint; do
   if [[ -n "${endpoint}" ]]; then
     ${SCRIPT_DIR}/waitForEndpoint.sh "${endpoint}" 10 10
   fi
