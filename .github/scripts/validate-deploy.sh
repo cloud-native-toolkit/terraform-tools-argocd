@@ -52,7 +52,7 @@ fi
 echo "Validating argo endpoints:"
 echo "${ENDPOINTS}"
 
-echo ${ENDPOINTS} | while read endpoint; do
+kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
   if [[ -n "${endpoint}" ]]; then
     ${SCRIPT_DIR}/waitForEndpoint.sh "https://${endpoint}" 10 10
   fi
