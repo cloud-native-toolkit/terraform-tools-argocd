@@ -13,7 +13,7 @@ locals {
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
-  tls_secret_name   = regex("([^.]+).*", var.ingress_subdomain)[0]
+  tls_secret_name   = length(regexall("([^.]+).*", var.ingress_subdomain)) > 0 ? regex("([^.]+).*", var.ingress_subdomain)[0] : ""
   argocd_values       = {
     global = {
       ingressSubdomain = var.ingress_subdomain
