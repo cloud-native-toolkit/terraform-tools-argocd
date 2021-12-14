@@ -3,21 +3,19 @@ locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = module.setup_clis.bin_dir
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
+  host_file         = "${local.bin_dir}/argocd-cluster.host"
   cluster_version   = data.local_file.cluster_version.content
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
-  host              = "${local.name}-server-${local.app_namespace}.${var.ingress_subdomain}"
-  grpc_host         = "${local.name}-server-grpc-${local.app_namespace}.${var.ingress_subdomain}"
+  host              = data.local_file.argocd_host.content
+  grpc_host         = data.local_file.argocd_host.content
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
-  tls_secret_name   = length(regexall("([^.]+).*", var.ingress_subdomain)) > 0 ? regex("([^.]+).*", var.ingress_subdomain)[0] : ""
   argocd_values       = {
     global = {
-      ingressSubdomain = var.ingress_subdomain
-      tlsSecretName = local.tls_secret_name
       clusterType = var.cluster_type
     }
     openshift-gitops = {
@@ -38,7 +36,6 @@ locals {
     username = "admin"
     password = data.local_file.argocd_password.content
     applicationMenu = !local.openshift_gitops
-    ingressSubdomain = var.ingress_subdomain
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
   service_account_name = "${local.name}-argocd-application-controller"
@@ -209,6 +206,28 @@ resource null_resource argocd-config {
       BIN_DIR = self.triggers.bin_dir
     }
   }
+}
+
+resource null_resource get_argocd_host {
+  depends_on = [null_resource.argocd_helm]
+
+  triggers = {
+    always = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/get-argocd-host.sh '${var.app_namespace}' '${local.host_file}'"
+
+    environment = {
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
+data local_file argocd_host {
+  depends_on = [null_resource.get_argocd_host]
+
+  filename = local.host_file
 }
 
 //resource "null_resource" "delete-solsa-helm" {

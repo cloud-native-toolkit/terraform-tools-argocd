@@ -6,6 +6,7 @@ variable "cluster_config_file" {
 variable "cluster_type" {
   type        = string
   description = "The type of cluster (openshift or kubernetes)"
+  default     = "ocp4"
 }
 
 variable "olm_namespace" {
@@ -21,12 +22,6 @@ variable "operator_namespace" {
 variable "app_namespace" {
   type        = string
   description = "Namespace where operators will be installed"
-}
-
-variable "ingress_subdomain" {
-  type        = string
-  description = "The subdomain for ingresses in the cluster"
-  default     = ""
 }
 
 variable "name" {
