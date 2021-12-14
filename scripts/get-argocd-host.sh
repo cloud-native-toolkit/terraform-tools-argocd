@@ -8,6 +8,10 @@ if [[ -z "${OUTPUT_FILE}" ]]; then
   exit 1
 fi
 
+if [[ -z "${BIN_DIR}" ]]; then
+  BIN_DIR="/usr/local/bin"
+fi
+
 mkdir -p "$(dirname "${OUTPUT_FILE}")"
 
 LABEL="app.kubernetes.io/part-of=argocd"
@@ -22,15 +26,16 @@ while true; do
   count=$((count + 1))
   echo "Waiting for route with label '${LABEL}' in namespace ${NAMESPACE}"
 
-  ARGO_ROUTES=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o jsonpath='{range .items[]}{.metadata.name}{";"}{end}')
-  if [[ -n "${ARGO_ROUTES}" ]]; then
-    echo "Found route with label '${LABEL}' in namespace ${NAMESPACE}: ${ARGO_ROUTES}"
+  ROUTE_COUNT=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | "${BIN_DIR}/jq" '.items | length')
+  if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
+    echo "Found route with label '${LABEL}' in namespace ${NAMESPACE}"
     break
   fi
   sleep 30
 done
 
-ARGO_HOSTS=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o jsonpath='{range .items[]}{.spec.host}{";"}{end}')
-HOST=$(echo "${ARGO_HOSTS}" | sed -E 's/([^;]+);.*/\1/g')
+HOST=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | "${BIN_DIR}/jq" -r '.items[0] | .spec.host')
+
+echo "Found ArgoCD host: ${HOST}"
 
 echo -n "${HOST}" > "${OUTPUT_FILE}"

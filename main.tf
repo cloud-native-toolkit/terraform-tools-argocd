@@ -58,7 +58,7 @@ resource null_resource cluster_version {
 module setup_clis {
   source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
 
-  clis = ["helm"]
+  clis = ["helm", "jq"]
 }
 
 data local_file cluster_version {
@@ -220,6 +220,7 @@ resource null_resource get_argocd_host {
 
     environment = {
       KUBECONFIG = var.cluster_config_file
+      BIN_DIR    = local.bin_dir
     }
   }
 }
