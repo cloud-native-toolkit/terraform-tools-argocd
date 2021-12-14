@@ -1,0 +1,60 @@
+name: argocd
+type: terraform
+description: Module to install ArgoCD into a cluster via an operator
+tags:
+    - tools
+    - devops
+    - gitops
+    - argocd
+versions:
+- platforms:
+    - kubernetes
+    - ocp3
+    - ocp4
+  dependencies:
+    - id: cluster
+      refs:
+        - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
+          version: ">= 1.7.0"
+        - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
+          version: ">= 1.0.0"
+        - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
+          version: ">= 1.0.0"
+        - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
+          version: ">= 2.0.0"
+        - source: github.com/ibm-garage-cloud/terraform-ocp-login
+          version: ">= 1.0.0"
+    - id: olm
+      refs:
+        - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+          version: ">= 1.2.2"
+    - id: namespace
+      refs:
+        - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
+          version: ">= 2.1.0"
+  variables:
+    - name: cluster_type
+      moduleRef:
+        id: cluster
+        output: platform.type_code
+    - name: ingress_subdomain
+      moduleRef:
+        id: cluster
+        output: platform.ingress
+    - name: cluster_config_file
+      moduleRef:
+        id: cluster
+        output: config_file_path
+    - name: olm_namespace
+      moduleRef:
+        id: olm
+        output: olm_namespace
+    - name: operator_namespace
+      moduleRef:
+        id: olm
+        output: target_namespace
+    - name: app_namespace
+      moduleRef:
+        id: namespace
+        output: name
+        discriminator: tools
