@@ -216,7 +216,7 @@ resource null_resource get_argocd_host {
   }
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/get-argocd-host.sh '${var.app_namespace}' '${local.host_file}'"
+    command = "${path.module}/scripts/get-argocd-host.sh '${local.app_namespace}' '${local.host_file}'"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
