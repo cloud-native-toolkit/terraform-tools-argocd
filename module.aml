@@ -33,14 +33,6 @@ versions:
         - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
           version: ">= 2.1.0"
   variables:
-    - name: cluster_type
-      moduleRef:
-        id: cluster
-        output: platform.type_code
-    - name: ingress_subdomain
-      moduleRef:
-        id: cluster
-        output: platform.ingress
     - name: cluster_config_file
       moduleRef:
         id: cluster
