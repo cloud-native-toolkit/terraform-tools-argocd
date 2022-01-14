@@ -21,6 +21,7 @@ locals {
     openshift-gitops = {
       enabled = local.openshift_gitops
       createInstance = false
+      controllerRbac = true
       subscription = {
         channel = local.version_re == "6" ? "preview" : "stable"
       }
