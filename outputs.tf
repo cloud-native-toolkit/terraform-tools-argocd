@@ -38,7 +38,7 @@ output "username" {
 
 output "password" {
   description = "The password of the default ArgoCD admin user"
-  value       = data.local_file.argocd_password.content
+  value       = data.external.argocd_config.result.password
   depends_on  = [null_resource.argocd-config]
   sensitive   = true
 }

@@ -2,8 +2,6 @@
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = module.setup_clis.bin_dir
-  version_file      = "${local.tmp_dir}/argocd-cluster.version"
-  host_file         = "${local.bin_dir}/argocd-cluster.host"
   cluster_version   = data.external.cluster_version.result.clusterVersion
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
@@ -13,7 +11,6 @@ locals {
   grpc_host         = data.external.argocd_config.result.host
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
-  password_file     = "${local.tmp_dir}/argocd-password.val"
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
