@@ -14,6 +14,7 @@ locals {
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
+      operatorNamespace = var.operator_namespace
     }
     openshift-gitops = {
       enabled = local.openshift_gitops

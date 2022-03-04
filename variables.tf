@@ -14,10 +14,14 @@ variable "olm_namespace" {
   description = "Namespace where olm is installed"
 }
 
+variable "operator_namespace" {
+  type        = string
+  description = "Namespace where operator will be installed"
+}
+
 variable "app_namespace" {
   type        = string
-  description = "Namespace where the ArgoCD instance will be installed"
-  default     = "openshift-gitops"
+  description = "Namespace where operator instance will be installed"
 }
 
 variable "name" {
