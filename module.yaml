@@ -33,6 +33,10 @@ versions:
       moduleRef:
         id: olm
         output: olm_namespace
+    - name: operator_namespace
+      moduleRef:
+        id: olm
+        output: operator_namespace
     - name: app_namespace
       moduleRef:
         id: namespace

@@ -28,6 +28,9 @@ locals {
       enabled = !local.openshift_gitops
       controllerRbac = true
     }
+    openshift-gitops-instance = {
+      enabled = var.app_namespace != "openshift-gitops"
+    }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
   argocd_config_values = {
