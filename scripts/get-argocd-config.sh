@@ -7,12 +7,25 @@ NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"
 OCP_MINOR_VERSION=$(echo "${INPUT}" | grep "minor_version" | sed -E 's/.*"minor_version": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
 
-# works with OCP 4.7+
-SECRET_NAME="openshift-gitops-cluster"
+count=0
+until kubectl get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
+  if [[ $count -eq 20 ]]; then
+    echo "{\"message\": \"Timed out waiting for argocd instance in namespace '${NAMESPACE}'\"}" >&2
+    exit 1
+  fi
 
-if [[ "${OCP_MINOR_VERSION}" == "6" ]]; then
-  SECRET_NAME="argocd-cluster-cluster"
-fi
+  count=$((count + 1))
+  sleep 30
+done
+
+ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+
+# works with OCP 4.7+
+SECRET_NAME="${ARGOCD_NAME}-cluster"
+
+#if [[ "${OCP_MINOR_VERSION}" == "6" ]]; then
+#  SECRET_NAME="argocd-cluster-cluster"
+#fi
 
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
