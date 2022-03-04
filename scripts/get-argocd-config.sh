@@ -17,6 +17,8 @@ fi
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   if [[ $count -eq 20 ]]; then
+    SECRETS=$(kubectl get secret -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.metadata.name}{","}{end}')
+    echo "{\"message\": \"Timed out waiting for secret named '${SECRET_NAME}' in namespace ${NAMESPACE}\", \"secrets\": \"${SECRETS}\"}" >&2
     exit 100
   fi
 
@@ -31,7 +33,7 @@ LABEL="app.kubernetes.io/part-of=argocd"
 count=0
 while true; do
   if [[ $count -eq 20 ]]; then
-    echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}"
+    echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
     exit 200
   fi
 
