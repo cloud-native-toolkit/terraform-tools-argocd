@@ -17,7 +17,7 @@ fi
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   if [[ $count -eq 20 ]]; then
-    exit 1
+    exit 100
   fi
 
   count=$((count + 1))
@@ -32,7 +32,7 @@ count=0
 while true; do
   if [[ $count -eq 20 ]]; then
     echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}"
-    exit 1
+    exit 200
   fi
 
   count=$((count + 1))
