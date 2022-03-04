@@ -9,7 +9,7 @@ module "dev_cluster" {
   ocp_version         = "4.6"
   exists              = var.cluster_exists
   name_prefix         = var.name_prefix
-  vpc_name            = var.vpc_cluster
+  vpc_name            = ""
   vpc_subnets         = []
   vpc_subnet_count    = 0
   cos_id              = ""

@@ -137,7 +137,7 @@ data external argocd_config {
   program = ["bash", "${path.module}/scripts/get-argocd-config.sh"]
 
   query = {
-    namespace = local.app_namespace
+    namespace = var.app_namespace
     minor_version = local.version_re
     kube_config = var.cluster_config_file
     bin_dir = module.setup_clis.bin_dir
