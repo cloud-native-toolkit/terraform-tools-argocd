@@ -4,13 +4,13 @@ locals {
   bin_dir           = module.setup_clis.bin_dir
   version_file      = "${local.tmp_dir}/argocd-cluster.version"
   host_file         = "${local.bin_dir}/argocd-cluster.host"
-  cluster_version   = data.local_file.cluster_version.content
+  cluster_version   = data.external.cluster_version.result.clusterVersion
   version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
   name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
   openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
   app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
-  host              = data.local_file.argocd_host.content
-  grpc_host         = data.local_file.argocd_host.content
+  host              = data.external.argocd_config.result.host
+  grpc_host         = data.external.argocd_config.result.host
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   password_file     = "${local.tmp_dir}/argocd-password.val"
@@ -35,24 +35,18 @@ locals {
   argocd_config_values = {
     name = "ArgoCD"
     username = "admin"
-    password = data.local_file.argocd_password.content
+    password = data.external.argocd_config.result.password
     applicationMenu = !local.openshift_gitops
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
   service_account_name = "${local.name}-argocd-application-controller"
 }
 
-resource null_resource cluster_version {
-  triggers = {
-    always = timestamp()
-  }
+data external cluster_version {
+  program = ["bash", "${path.module}/scripts/get-cluster-version.sh"]
 
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/get-cluster-version.sh ${local.version_file}"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
+  query = {
+    kube_config = var.cluster_config_file
   }
 }
 
@@ -60,12 +54,6 @@ module setup_clis {
   source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
 
   clis = ["helm", "jq"]
-}
-
-data local_file cluster_version {
-  depends_on = [null_resource.cluster_version]
-
-  filename = local.version_file
 }
 
 resource null_resource print_version {
@@ -146,26 +134,17 @@ resource null_resource wait-for-deployment {
   }
 }
 
-resource null_resource get_argocd_password {
+data external argocd_config {
   depends_on = [null_resource.argocd_helm]
 
-  triggers = {
-    always_run = timestamp()
+  program = ["bash", "${path.module}/scripts/get-argocd-config.sh"]
+
+  query = {
+    namespace = local.app_namespace
+    minor_version = local.version_re
+    kube_config = var.cluster_config_file
+    bin_dir = module.setup_clis.bin_dir
   }
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/get-argocd-password.sh ${local.app_namespace} ${local.password_file} ${local.version_re}"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-}
-
-data local_file argocd_password {
-  depends_on = [null_resource.get_argocd_password]
-
-  filename = local.password_file
 }
 
 resource null_resource argocd-config {
@@ -207,29 +186,6 @@ resource null_resource argocd-config {
       BIN_DIR = self.triggers.bin_dir
     }
   }
-}
-
-resource null_resource get_argocd_host {
-  depends_on = [null_resource.argocd_helm]
-
-  triggers = {
-    always = timestamp()
-  }
-
-  provisioner "local-exec" {
-    command = "${path.module}/scripts/get-argocd-host.sh '${local.app_namespace}' '${local.host_file}'"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-      BIN_DIR    = local.bin_dir
-    }
-  }
-}
-
-data local_file argocd_host {
-  depends_on = [null_resource.get_argocd_host]
-
-  filename = local.host_file
 }
 
 //resource "null_resource" "delete-solsa-helm" {
