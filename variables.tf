@@ -16,12 +16,13 @@ variable "olm_namespace" {
 
 variable "operator_namespace" {
   type        = string
-  description = "Namespace where operators will be installed"
+  description = "Namespace where operator will be installed"
 }
 
 variable "app_namespace" {
   type        = string
-  description = "Namespace where operators will be installed"
+  description = "Namespace where operator instance will be installed"
+  default     = "openshift-gitops"
 }
 
 variable "name" {
