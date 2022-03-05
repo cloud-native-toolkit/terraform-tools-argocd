@@ -22,6 +22,7 @@ variable "operator_namespace" {
 variable "app_namespace" {
   type        = string
   description = "Namespace where operator instance will be installed"
+  default     = "openshift-gitops"
 }
 
 variable "name" {
