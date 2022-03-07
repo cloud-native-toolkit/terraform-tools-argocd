@@ -10,40 +10,29 @@ fi
 mkdir -p "${TMP_DIR}"
 
 if [[ -z "${BIN_DIR}" ]]; then
-  mkdir -p ./bin
-  BIN_DIR=$(cd ./bin; pwd -P)
+  BIN_DIR="/usr/local/bin"
 fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
-HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
-
+HELM=$(command -v "${BIN_DIR}/helm" || command -v helm)
 if [[ -z "${HELM}" ]]; then
-  curl -sLo helmx.tar.gz https://get.helm.sh/helm-v3.6.1-linux-amd64.tar.gz
-
-  HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
-
-  if [[ -z "${HELM}" ]]; then
-    mkdir helm.tmp && cd helm.tmp && tar xzf ../helmx.tar.gz
-
-    HELM=$(command -v helm || command -v "${BIN_DIR}/helm")
-
-    if [[ -z "${HELM}" ]]; then
-      cp ./linux-amd64/helm "${BIN_DIR}/helm"
-
-      HELM="${BIN_DIR}/helm"
-    fi
-
-    cd .. && rm -rf helm.tmp && rm helmx.tar.gz
-  fi
+  echo "helm cli missing"
+  exit 1
 fi
 
-kubectl config set-context --current --namespace "${NAMESPACE}"
+KUBECTL=$(command -v "${BIN_DIR}/kubectl" || command -v kubectl)
+if [[ -z "${KUBECTL}" ]]; then
+  echo "kubectl cli missing"
+  exit 1
+fi
+
+${KUBECTL} config set-context --current --namespace "${NAMESPACE}"
 
 if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | kubectl apply --validate=false -f -
+${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | ${KUBECTL} apply --validate=false -f -
