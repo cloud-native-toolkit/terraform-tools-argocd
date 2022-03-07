@@ -43,18 +43,19 @@ locals {
   service_account_name = "${local.name}-argocd-application-controller"
 }
 
+module setup_clis {
+  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
+
+  clis = ["helm", "jq", "oc", "kubectl"]
+}
+
 data external cluster_version {
   program = ["bash", "${path.module}/scripts/get-cluster-version.sh"]
 
   query = {
+    bin_dir = module.setup_clis.bin_dir
     kube_config = var.cluster_config_file
   }
-}
-
-module setup_clis {
-  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
-
-  clis = ["helm", "jq"]
 }
 
 resource null_resource print_version {
@@ -69,7 +70,7 @@ resource null_resource print_version {
 
 resource null_resource delete_argocd_helm {
   provisioner "local-exec" {
-    command = "kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
+    command = "${module.setup_clis.bin_dir}/kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -77,7 +78,7 @@ resource null_resource delete_argocd_helm {
   }
 
   provisioner "local-exec" {
-    command = "kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
+    command = "${module.setup_clis.bin_dir}/kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
 
     environment = {
       KUBECONFIG = var.cluster_config_file
@@ -130,6 +131,7 @@ resource null_resource wait-for-deployment {
     command = "${path.module}/scripts/wait-for-statefulset.sh ${var.app_namespace}"
 
     environment = {
+      BIN_DIR = module.setup_clis.bin_dir
       KUBECONFIG = var.cluster_config_file
     }
   }
