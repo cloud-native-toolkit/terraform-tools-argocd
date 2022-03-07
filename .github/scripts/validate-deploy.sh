@@ -9,6 +9,10 @@ else
 fi
 export KUBECONFIG
 
+BIN_DIR=$(cat .bin_dir)
+
+KUBECTL="${BIN_DIR}/kubectl"
+
 CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" | sed 's/"//g')
 
 echo "listing directory contents"
@@ -26,7 +30,7 @@ if [[ -z "${ARGO_HOST}" ]] || [[ -z "${ARGO_USERNAME}" ]] || [[ -z "${ARGO_PASSW
   exit 1
 fi
 
-ARGOCD=$(command -v argocd || command -v ./argocd)
+ARGOCD=$(command -v ${BIN_DIR}/argocd || command -v argocd)
 
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
@@ -34,7 +38,7 @@ fi
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
-PODS=$(kubectl get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
+PODS=$(${KUBECTL} get -n "${NAMESPACE}" pods -o jsonpath='{range .items[*]}{.status.phase}{": "}{.kind}{"/"}{.metadata.name}{"\n"}{end}' | grep -v "Running" | grep -v "Succeeded")
 POD_STATUSES=$(echo "${PODS}" | sed -E "s/(.*):.*/\1/g")
 if [[ -n "${POD_STATUSES}" ]]; then
   echo "  Pods have non-success statuses: ${PODS}"
@@ -44,15 +48,15 @@ fi
 set -e
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
-  ENDPOINTS=$(kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
+  ENDPOINTS=$(${KUBECTL} get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}')
 else
-  ENDPOINTS=$(kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
+  ENDPOINTS=$(${KUBECTL} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}')
 fi
 
 echo "Validating argo endpoints:"
 echo "${ENDPOINTS}"
 
-kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
+${KUBECTL} get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
   if [[ -n "${endpoint}" ]]; then
     ${SCRIPT_DIR}/waitForEndpoint.sh "https://${endpoint}" 10 10
   fi
@@ -62,17 +66,10 @@ echo "Endpoints validated"
 
 if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
   echo "Validating consolelink"
-  if [[ $(kubectl get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
+  if [[ $(${KUBECTL} get consolelink "${CONSOLE_LINK_NAME}" | wc -l) -eq 0 ]]; then
     echo "   ConsoleLink not found"
     exit 1
   fi
-fi
-
-if [[ -z "${ARGOCD}" ]]; then
-  VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-  curl -sSL -o ./argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
-  chmod +x ./argocd
-  ARGOCD="$(pwd -P)/argocd"
 fi
 
 echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
