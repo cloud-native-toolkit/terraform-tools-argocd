@@ -2,9 +2,9 @@ module "dev_tools_argocd" {
   source = "./module"
 
   cluster_config_file = module.dev_cluster.config_file_path
-  olm_namespace       = module.dev_capture_olm_state.namespace
-  operator_namespace  = module.dev_capture_operator_state.namespace
-  app_namespace       = module.dev_capture_tools_state.namespace
+  olm_namespace       = module.dev_software_olm.olm_namespace
+  operator_namespace  = module.dev_software_olm.target_namespace
+  app_namespace       = module.dev_tools_namespace.name
   name                = "argocd"
 }
 
