@@ -7,11 +7,20 @@ NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"
 OCP_MINOR_VERSION=$(echo "${INPUT}" | grep "minor_version" | sed -E 's/.*"minor_version": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
 
-KUBECTL="${BIN_DIR}/kubectl"
-JQ="${BIN_DIR}/jq"
+export PATH="${BIN_DIR}:${PATH}"
+
+if ! command -v kubectl 1> /dev/null 2> /dev/null; then
+  echo "kubectl cli not found" >&2
+  exit 1
+fi
+
+if ! command -v jq 1> /dev/null 2> /dev/null; then
+  echo "jq cli not found" >&2
+  exit 1
+fi
 
 count=0
-until ${KUBECTL} get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
+until kubectl get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   if [[ $count -eq 20 ]]; then
     echo "{\"message\": \"Timed out waiting for argocd instance in namespace '${NAMESPACE}'\"}" >&2
     exit 1
@@ -21,7 +30,12 @@ until ${KUBECTL} get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   sleep 30
 done
 
-ARGOCD_NAME=$(${KUBECTL} get argocd -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}')
+ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .metadata.name' | head -n 1)
+
+if [[ -z "${ARGOCD_NAME}" ]]; then
+  echo "ArgoCD name not found in namespace ${NAMESPACE}" >&2
+  exit 1
+fi
 
 # works with OCP 4.7+
 SECRET_NAME="${ARGOCD_NAME}-cluster"
@@ -31,10 +45,9 @@ SECRET_NAME="${ARGOCD_NAME}-cluster"
 #fi
 
 count=0
-until ${KUBECTL} get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
+until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   if [[ $count -eq 20 ]]; then
-    SECRETS=$(${KUBECTL} get secret -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.metadata.name}{","}{end}')
-    echo "{\"message\": \"Timed out waiting for secret '${SECRET_NAME}' in namespace '${NAMESPACE}'\", \"secrets\": \"${SECRETS}\"}" >&2
+    kubectl get secret -n "${NAMESPACE}" >&2
     exit 100
   fi
 
@@ -42,7 +55,7 @@ until ${KUBECTL} get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /
   sleep 30
 done
 
-PASSWORD=$(${KUBECTL} get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o jsonpath='{ .data.admin\.password }' | base64 -d)
+PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r '.data["admin.password"] | @base64d')
 
 LABEL="app.kubernetes.io/part-of=argocd"
 
@@ -55,13 +68,13 @@ while true; do
 
   count=$((count + 1))
 
-  ROUTE_COUNT=$(${KUBECTL} get route -l ${LABEL} -n "${NAMESPACE}" -o json | ${JQ} '.items | length')
+  ROUTE_COUNT=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | jq '.items | length')
   if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
     break
   fi
   sleep 30
 done
 
-HOST=$(${KUBECTL} get route -l ${LABEL} -n "${NAMESPACE}" -o json | ${JQ} -r '.items[0] | .spec.host')
+HOST=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
 
 echo "{\"host\": \"${HOST}\", \"password\": \"${PASSWORD}\"}"

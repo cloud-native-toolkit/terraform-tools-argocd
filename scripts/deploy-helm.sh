@@ -9,30 +9,28 @@ if [[ -z "${TMP_DIR}" ]]; then
 fi
 mkdir -p "${TMP_DIR}"
 
-if [[ -z "${BIN_DIR}" ]]; then
-  BIN_DIR="/usr/local/bin"
+if [[ -n "${BIN_DIR}" ]]; then
+  export PATH="${BIN_DIR}:${PATH}"
 fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
-HELM=$(command -v "${BIN_DIR}/helm" || command -v helm)
-if [[ -z "${HELM}" ]]; then
-  echo "helm cli missing"
+if ! command -v helm 1> /dev/null 2> /dev/null; then
+  echo "helm cli missing" >&2
   exit 1
 fi
 
-KUBECTL=$(command -v "${BIN_DIR}/kubectl" || command -v kubectl)
-if [[ -z "${KUBECTL}" ]]; then
-  echo "kubectl cli missing"
+if ! command -v kubectl 1> /dev/null 2> /dev/null; then
+  echo "kubectl cli missing" >&2
   exit 1
 fi
-
-${KUBECTL} config set-context --current --namespace "${NAMESPACE}"
 
 if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-${HELM} template "${NAME}" "${CHART}" ${repo_config} --values "${VALUES_FILE}" | ${KUBECTL} apply --validate=false -f -
+helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}"
+
+helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}" | kubectl apply --validate=false -f -
