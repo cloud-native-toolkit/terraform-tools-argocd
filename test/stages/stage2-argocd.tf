@@ -10,7 +10,7 @@ module "dev_tools_argocd" {
 
 resource "null_resource" "output_values" {
   provisioner "local-exec" {
-    command = "echo -n '${module.dev_capture_tools_state.namespace}' > .namespace"
+    command = "echo -n '${module.dev_tools_argocd.namespace}' > .namespace"
   }
   provisioner "local-exec" {
     command = "echo -n '${module.dev_tools_argocd.namespace}' > .argo-namespace"
