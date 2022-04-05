@@ -19,12 +19,84 @@ versions:
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         discriminator: openshift-gitops
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
+    variables:
+      - name: cluster_config_file
+        type: string
+        description: Cluster config file for Kubernetes cluster.
+        moduleRef:
+          id: cluster
+          output: config_file_path
+      - name: cluster_type
+        type: string
+        description: The type of cluster (openshift or kubernetes)
+        default: ocp4
+      - name: olm_namespace
+        type: string
+        description: Namespace where olm is installed
+        moduleRef:
+          id: olm
+          output: olm_namespace
+      - name: operator_namespace
+        type: string
+        description: Namespace where operator will be installed
+        moduleRef:
+          id: olm
+          output: operator_namespace
+      - name: app_namespace
+        type: string
+        description: Namespace where operator instance will be installed
+        default: openshift-gitops
+        moduleRef:
+          id: namespace
+          output: name
+      - name: name
+        type: string
+        description: The name for the instance
+        default: argocd-cluster
+    version: v2.18.3
+    outputs:
+      - name: ingress_host
+        description: The ingress host for the Argo CD instance
+        sensitive: true
+      - name: ingress_url
+        description: The ingress url for the Argo CD instance
+        sensitive: true
+      - name: provision_tekton
+        description: Flag indicating that Tekton should be provisioned
+      - name: namespace
+        description: The namespace where the ArgoCD instance has been provisioned
+      - name: service_account
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
+      - name: username
+        description: The username of the default ArgoCD admin user
+      - name: password
+        description: The password of the default ArgoCD admin user
+        sensitive: true
+  - platforms:
+      - kubernetes
+      - ocp3
+      - ocp4
+    dependencies:
+      - id: cluster
+        interface: github.com/cloud-native-toolkit/automation-modules#cluster
+        refs: []
+      - id: olm
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+            version: '>= 1.2.2'
+      - id: namespace
+        discriminator: openshift-gitops
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -73,7 +145,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -89,12 +163,12 @@ versions:
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         discriminator: openshift-gitops
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -143,7 +217,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -159,12 +235,12 @@ versions:
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         discriminator: openshift-gitops
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -213,7 +289,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -229,11 +307,11 @@ versions:
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -281,7 +359,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -294,23 +374,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -358,7 +438,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -371,23 +453,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_config_file
         moduleRef:
@@ -435,7 +517,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -448,23 +532,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -519,7 +603,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -532,23 +618,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -562,7 +648,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -605,7 +691,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -618,23 +706,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -648,7 +736,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -691,7 +779,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -704,23 +794,23 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-iks-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -734,7 +824,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -777,7 +867,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -790,21 +882,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -818,7 +910,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -861,7 +953,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -874,21 +968,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -902,7 +996,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -945,7 +1039,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -958,21 +1054,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -986,7 +1082,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1029,7 +1125,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -1042,21 +1140,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1070,7 +1168,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1113,7 +1211,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -1126,21 +1226,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1154,7 +1254,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1197,7 +1297,9 @@ versions:
       - name: namespace
         description: The namespace where the ArgoCD instance has been provisioned
       - name: service_account
-        description: The name of the service account for the ArgoCD instance has been provisioned
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
       - name: username
         description: The username of the default ArgoCD admin user
       - name: password
@@ -1210,21 +1312,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1238,7 +1340,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1292,21 +1394,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1320,7 +1422,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1374,21 +1476,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1402,7 +1504,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1456,21 +1558,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1484,7 +1586,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1538,21 +1640,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1566,7 +1668,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1620,21 +1722,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1648,7 +1750,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1698,21 +1800,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1726,7 +1828,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1776,21 +1878,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1804,7 +1906,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1850,21 +1952,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1878,7 +1980,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1924,21 +2026,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -1952,7 +2054,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -1998,21 +2100,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -2026,7 +2128,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -2072,21 +2174,21 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
           - source: github.com/ibm-garage-cloud/terraform-ocp-login
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -2100,7 +2202,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -2151,19 +2253,19 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -2177,7 +2279,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -2228,19 +2330,19 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-ibm-ocp-vpc
-            version: ">= 1.0.0"
+            version: '>= 1.0.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
@@ -2254,7 +2356,7 @@ versions:
           output: platform.ingress
         type: string
         description: The subdomain for ingresses in the cluster
-        default: ""
+        default: ''
         optional: true
       - name: cluster_config_file
         moduleRef:
@@ -2305,17 +2407,17 @@ versions:
       - id: cluster
         refs:
           - source: github.com/ibm-garage-cloud/terraform-ibm-container-platform
-            version: ">= 1.7.0"
+            version: '>= 1.7.0'
           - source: github.com/ibm-garage-cloud/terraform-k8s-ocp-cluster
-            version: ">= 2.0.0"
+            version: '>= 2.0.0'
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-            version: ">= 1.2.2"
+            version: '>= 1.2.2'
       - id: namespace
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-            version: ">= 2.1.0"
+            version: '>= 2.1.0'
     variables:
       - name: cluster_type
         moduleRef:
