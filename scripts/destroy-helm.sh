@@ -22,4 +22,13 @@ if ! command -v helm 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-helm delete "${NAME}" -n "${NAMESPACE}" || echo "Unable to find helm release: ${NAME}"
+if ! command -v kubectl 1> /dev/null 2> /dev/null; then
+  echo "kubectl cli missing" >&2
+  exit 1
+fi
+
+if [[ -n "${REPO}" ]]; then
+  repo_config="--repo ${REPO}"
+fi
+
+helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}" | kubectl delete -f - || echo "Error deleting helm resources: ${NAME}"
