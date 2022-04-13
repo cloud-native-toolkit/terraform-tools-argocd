@@ -26,4 +26,4 @@ if [[ -z "${name}" ]]; then
   exit 1
 fi
 
-kubectl rollout status -n "${NAMESPACE}" "statefulset/${name}"
+kubectl rollout status -n "${NAMESPACE}" "statefulset/${name}" --timeout=1h
