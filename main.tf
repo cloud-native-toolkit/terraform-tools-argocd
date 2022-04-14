@@ -135,8 +135,21 @@ resource null_resource wait_for_crd {
   }
 }
 
+resource null_resource wait-for-namespace {
+  depends_on = [null_resource.argocd_operator_helm]
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/wait-for-namespace.sh ${var.app_namespace}"
+
+    environment = {
+      BIN_DIR = module.setup_clis.bin_dir
+      KUBECONFIG = var.cluster_config_file
+    }
+  }
+}
+
 resource null_resource argocd_instance_helm {
-  depends_on = [null_resource.wait_for_crd]
+  depends_on = [null_resource.wait_for_crd, null_resource.wait-for-namespace]
 
   triggers = {
     namespace = var.app_namespace
