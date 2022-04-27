@@ -59,6 +59,78 @@ versions:
         type: string
         description: The name for the instance
         default: argocd-cluster
+    version: v2.18.9
+    outputs:
+      - name: ingress_host
+        description: The ingress host for the Argo CD instance
+        sensitive: true
+      - name: ingress_url
+        description: The ingress url for the Argo CD instance
+        sensitive: true
+      - name: provision_tekton
+        description: Flag indicating that Tekton should be provisioned
+      - name: namespace
+        description: The namespace where the ArgoCD instance has been provisioned
+      - name: service_account
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
+      - name: username
+        description: The username of the default ArgoCD admin user
+      - name: password
+        description: The password of the default ArgoCD admin user
+        sensitive: true
+  - platforms:
+      - kubernetes
+      - ocp3
+      - ocp4
+    dependencies:
+      - id: cluster
+        interface: github.com/cloud-native-toolkit/automation-modules#cluster
+        refs: []
+      - id: olm
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+            version: '>= 1.2.2'
+      - id: namespace
+        discriminator: openshift-gitops
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
+            version: '>= 2.1.0'
+    variables:
+      - name: cluster_config_file
+        type: string
+        description: Cluster config file for Kubernetes cluster.
+        moduleRef:
+          id: cluster
+          output: config_file_path
+      - name: cluster_type
+        type: string
+        description: The type of cluster (openshift or kubernetes)
+        default: ocp4
+      - name: olm_namespace
+        type: string
+        description: Namespace where olm is installed
+        moduleRef:
+          id: olm
+          output: olm_namespace
+      - name: operator_namespace
+        type: string
+        description: Namespace where operator will be installed
+        moduleRef:
+          id: olm
+          output: operator_namespace
+      - name: app_namespace
+        type: string
+        description: Namespace where operator instance will be installed
+        default: openshift-gitops
+        moduleRef:
+          id: namespace
+          output: name
+      - name: name
+        type: string
+        description: The name for the instance
+        default: argocd-cluster
     version: v2.18.8
     outputs:
       - name: ingress_host
