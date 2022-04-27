@@ -1,6 +1,2 @@
 openshift-gitops:
   enabled: true
-argocd-operator:
-  enabled: false
-openshift-gitops-instance:
-  enabled: false

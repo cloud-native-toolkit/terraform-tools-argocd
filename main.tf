@@ -2,11 +2,8 @@
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = module.setup_clis.bin_dir
-  cluster_version   = data.external.cluster_version.result.clusterVersion
-  version_re        = substr(local.cluster_version, 0, 1) == "4" ? regex("^4.([0-9]+)", local.cluster_version)[0] : ""
-  name              = local.version_re == "6" ? "argocd-cluster" : "openshift-gitops"
-  openshift_gitops  = local.version_re == "6" || local.version_re == "7" || local.version_re == "8" || local.version_re == "9"
-  app_namespace     = local.openshift_gitops ? "openshift-gitops" : var.app_namespace
+  name              = "openshift-gitops"
+  app_namespace     = "openshift-gitops"
   host              = data.external.argocd_config.result.host
   grpc_host         = data.external.argocd_config.result.host
   url_endpoint      = "https://${local.host}"
@@ -17,16 +14,12 @@ locals {
       operatorNamespace = var.operator_namespace
     }
     openshift-gitops = {
-      enabled = local.openshift_gitops
+      enabled = true
       createInstance = false
       controllerRbac = true
       subscription = {
-        channel = local.version_re == "6" ? "preview" : "stable"
+        channel = "stable"
       }
-    }
-    argocd-operator = {
-      enabled = !local.openshift_gitops
-      controllerRbac = true
     }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
@@ -34,35 +27,17 @@ locals {
     name = "ArgoCD"
     username = "admin"
     password = data.external.argocd_config.result.password
-    applicationMenu = !local.openshift_gitops
+    applicationMenu = false
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
   service_account_name = "${local.name}-argocd-application-controller"
 }
 
 module setup_clis {
-  source = "github.com/cloud-native-toolkit/terraform-util-clis.git"
+  source = "cloud-native-toolkit/clis/util"
+  version = "1.9.5"
 
   clis = ["helm", "jq", "oc", "kubectl"]
-}
-
-data external cluster_version {
-  program = ["bash", "${path.module}/scripts/get-cluster-version.sh"]
-
-  query = {
-    bin_dir = module.setup_clis.bin_dir
-    kube_config = var.cluster_config_file
-  }
-}
-
-resource null_resource print_version {
-  provisioner "local-exec" {
-    command = "echo 'Cluster version: ${local.version_re}'"
-  }
-
-  provisioner "local-exec" {
-    command = "echo 'OpenShift GitOps: ${local.openshift_gitops}'"
-  }
 }
 
 resource null_resource delete_argocd_helm {
@@ -203,7 +178,6 @@ data external argocd_config {
 
   query = {
     namespace = var.app_namespace
-    minor_version = local.version_re
     kube_config = var.cluster_config_file
     bin_dir = module.setup_clis.bin_dir
   }
@@ -249,57 +223,3 @@ resource null_resource argocd-config {
     }
   }
 }
-
-//resource "null_resource" "delete-solsa-helm" {
-//  provisioner "local-exec" {
-//    command = "kubectl delete -n ${local.app_namespace} secret sh.helm.release.v1.solsa.v1 || exit 0"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//    }
-//  }
-//}
-//
-//resource "helm_release" "solsa" {
-//  depends_on = [null_resource.argocd-instance, null_resource.delete-solsa-helm]
-//
-//  name         = "solsa"
-//  chart        = "${path.module}/charts/solsa-cm"
-//  namespace    = local.app_namespace
-//  force_update = true
-//
-//  set {
-//    name  = "ingress.subdomain"
-//    value = var.ingress_subdomain
-//  }
-//
-//  set {
-//    name  = "ingress.tlssecret"
-//    value = local.tls_secret_name
-//  }
-//}
-//
-//resource "null_resource" "install-solsa-plugin" {
-//  depends_on = [helm_release.solsa]
-//
-//  provisioner "local-exec" {
-//    command = "${path.module}/scripts/patch-solsa.sh ${local.app_namespace} ${local.name}"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//    }
-//  }
-//}
-//
-//resource "null_resource" "install-key-protect-plugin" {
-//  depends_on = [null_resource.argocd-instance, null_resource.install-solsa-plugin]
-//
-//  provisioner "local-exec" {
-//    command = "${path.module}/scripts/install-key-protect-plugin.sh ${local.app_namespace} ${local.name}"
-//
-//    environment = {
-//      KUBECONFIG = var.cluster_config_file
-//      TMP_DIR    = local.tmp_dir
-//    }
-//  }
-//}

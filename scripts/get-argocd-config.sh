@@ -4,7 +4,6 @@ INPUT=$(tee)
 
 export KUBECONFIG=$(echo "${INPUT}" | grep "kube_config" | sed -E 's/.*"kube_config": ?"([^"]*)".*/\1/g')
 NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"]*)".*/\1/g')
-OCP_MINOR_VERSION=$(echo "${INPUT}" | grep "minor_version" | sed -E 's/.*"minor_version": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
 
 export PATH="${BIN_DIR}:${PATH}"
@@ -39,10 +38,6 @@ fi
 
 # works with OCP 4.7+
 SECRET_NAME="${ARGOCD_NAME}-cluster"
-
-#if [[ "${OCP_MINOR_VERSION}" == "6" ]]; then
-#  SECRET_NAME="argocd-cluster-cluster"
-#fi
 
 count=0
 until kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do

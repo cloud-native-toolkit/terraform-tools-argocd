@@ -14,7 +14,7 @@ output "ingress_url" {
 
 output "provision_tekton" {
   description = "Flag indicating that Tekton should be provisioned"
-  value       = !local.openshift_gitops || local.version_re != "6"
+  value       = false
   depends_on  = [null_resource.argocd-config]
 }
 
