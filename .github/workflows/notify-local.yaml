@@ -1,0 +1,23 @@
+name: Notify dependencies
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        repo:
+          - cloud-native-toolkit/terraform-tools-openshift-cicd
+
+    steps:
+      - name: Repository dispatch ${{ matrix.repo }}
+        uses: cloud-native-toolkit/action-repository-dispatch@main
+        with:
+          notifyRepo: ${{ matrix.repo }}
+          eventType: released
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
