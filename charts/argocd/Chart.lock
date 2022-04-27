@@ -4,6 +4,6 @@ dependencies:
   version: 0.9.0
 - name: argocd-operator
   repository: https://charts.cloudnativetoolkit.dev/
-  version: 0.6.0
-digest: sha256:9668ed85b6639f3b710eb31fa8c94ffea7d044e0a8519bbd9e31331a634239a1
-generated: "2022-04-26T22:35:48.889555-04:00"
+  version: 0.6.1
+digest: sha256:6a2aa3133cadc62c5529e040b6254911dca700e95cf193decaf9e1b21a1f87e4
+generated: "2022-04-27T09:50:22.507175-04:00"
