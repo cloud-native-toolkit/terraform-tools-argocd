@@ -14,7 +14,7 @@ output "ingress_url" {
 
 output "provision_tekton" {
   description = "Flag indicating that Tekton should be provisioned"
-  value       = false
+  value       = true
   depends_on  = [null_resource.argocd-config]
 }
 
