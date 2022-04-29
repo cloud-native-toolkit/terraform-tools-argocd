@@ -73,6 +73,6 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
 fi
 
 echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
-${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web || exit 1
+${ARGOCD} login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --grpc-web || exit 1
 
 exit 0

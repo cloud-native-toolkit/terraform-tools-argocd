@@ -1,6 +1,6 @@
 dependencies:
 - name: openshift-gitops-instance
   repository: https://charts.cloudnativetoolkit.dev/
-  version: 0.4.0
-digest: sha256:a052f7ed95fc32acf37afdbb268327f00f0e7d66270d999760994d51dbc0cab2
-generated: "2022-04-26T22:35:36.083325-04:00"
+  version: 0.5.0
+digest: sha256:4bb0e102273c67862cdfcbb679978953dd62528f063d62c25fcb7dbab2690edb
+generated: "2022-04-28T23:20:05.095318-05:00"
