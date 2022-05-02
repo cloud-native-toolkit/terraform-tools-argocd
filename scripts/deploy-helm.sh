@@ -4,6 +4,11 @@ NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
 
+if [[ "${SKIP}" == "true" ]]; then
+  echo "Skipping helm deploy: ${NAME} ${CHART}"
+  exit 0
+fi
+
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR="./tmp"
 fi
@@ -31,6 +36,10 @@ if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}"
+if [[ -n "${VERSION}" ]]; then
+  version_config="--version ${VERSION}"
+fi
 
-helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}" | kubectl apply --validate=false -f -
+helm template "${NAME}" "${CHART}" ${repo_config} ${version_config} -n "${NAMESPACE}" --values "${VALUES_FILE}"
+
+helm upgrade -i "${NAME}" "${CHART}" ${repo_config} ${version_config} -n "${NAMESPACE}" --values "${VALUES_FILE}"

@@ -63,13 +63,13 @@ while true; do
 
   count=$((count + 1))
 
-  ROUTE_COUNT=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | jq '.items | length')
+  ROUTE_COUNT=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
   if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
     break
   fi
   sleep 30
 done
 
-HOST=$(kubectl get route -l ${LABEL} -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
+HOST=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
 
 echo "{\"host\": \"${HOST}\", \"password\": \"${PASSWORD}\"}"

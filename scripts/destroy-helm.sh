@@ -4,6 +4,11 @@ NAMESPACE="$1"
 NAME="$2"
 CHART="$3"
 
+if [[ "${SKIP}" == "true" ]]; then
+  echo "Skipping helm deploy: ${NAME} ${CHART}"
+  exit 0
+fi
+
 if [[ -z "${TMP_DIR}" ]]; then
   TMP_DIR="./tmp"
 fi
@@ -31,4 +36,6 @@ if [[ -n "${REPO}" ]]; then
   repo_config="--repo ${REPO}"
 fi
 
-helm template "${NAME}" "${CHART}" ${repo_config} -n "${NAMESPACE}" --values "${VALUES_FILE}" | kubectl delete -f - || echo "Error deleting helm resources: ${NAME}"
+if helm status -n "${NAMESPACE}" "${NAME}" 1> /dev/null 2> /dev/null; then
+  helm delete -n "${NAMESPACE}" "${NAME}"
+fi

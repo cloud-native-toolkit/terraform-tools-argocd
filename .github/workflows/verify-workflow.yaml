@@ -11,12 +11,12 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    container: quay.io/cloudnativetoolkit/cli-tools:v1.1
+    container: quay.io/cloudnativetoolkit/cli-tools:v1.0
 
     strategy:
       matrix:
         testcase:
-          - ocp4_latest
+          - ocp4_9_gitops
       fail-fast: false
       max-parallel: 1
 

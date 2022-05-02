@@ -18,9 +18,15 @@ output "provision_tekton" {
   depends_on  = [null_resource.argocd-config]
 }
 
+output "operator_namespace" {
+  description = "The namespace where the operator has been provisioend"
+  value       = var.operator_namespace
+  depends_on  = [null_resource.argocd-config]
+}
+
 output "namespace" {
   description = "The namespace where the ArgoCD instance has been provisioned"
-  value       = local.app_namespace
+  value       = var.app_namespace
   depends_on  = [null_resource.argocd-config]
 }
 

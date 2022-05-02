@@ -8,6 +8,7 @@ locals {
   grpc_host         = data.external.argocd_config.result.host
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
+  created_by        = "argo-${random_string.random.result}"
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
@@ -27,7 +28,9 @@ locals {
     name = "ArgoCD"
     username = "admin"
     password = data.external.argocd_config.result.password
+    url = "https://${data.external.argocd_config.result.host}"
     applicationMenu = false
+    enableConsoleLink = false
   }
   argocd_config_values_file = "${local.tmp_dir}/values-argocd-config.yaml"
   service_account_name = "${local.name}-argocd-application-controller"
@@ -40,26 +43,26 @@ module setup_clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
 
-resource null_resource delete_argocd_helm {
-  provisioner "local-exec" {
-    command = "${module.setup_clis.bin_dir}/kubectl delete job job-argocd -n ${local.app_namespace} || exit 0"
+data external check_for_operator {
+  program = ["bash", "${path.module}/scripts/check-for-operator.sh"]
 
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
-  }
-
-  provisioner "local-exec" {
-    command = "${module.setup_clis.bin_dir}/kubectl delete job job-openshift-gitops-operator -n openshift-operators || exit 0"
-
-    environment = {
-      KUBECONFIG = var.cluster_config_file
-    }
+  query = {
+    kube_config = var.cluster_config_file
+    namespace = "openshift-operators"
+    bin_dir = module.setup_clis.bin_dir
+    created_by = local.created_by
   }
 }
 
+resource "random_string" "random" {
+  length           = 16
+  lower            = true
+  number           = true
+  upper            = false
+  special          = false
+}
+
 resource null_resource argocd_operator_helm {
-  depends_on = [null_resource.delete_argocd_helm]
 
   triggers = {
     namespace = var.operator_namespace
@@ -69,6 +72,8 @@ resource null_resource argocd_operator_helm {
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
+    created_by = local.created_by
+    skip = data.external.check_for_operator.result.exists
   }
 
   provisioner "local-exec" {
@@ -79,19 +84,23 @@ resource null_resource argocd_operator_helm {
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
     }
   }
 
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+    command = "${path.module}/scripts/destroy-operator.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
     }
   }
 }
@@ -123,16 +132,31 @@ resource null_resource wait-for-namespace {
   }
 }
 
+data external check_for_instance {
+  depends_on = [null_resource.wait_for_crd, null_resource.wait-for-namespace]
+
+  program = ["bash", "${path.module}/scripts/check-for-instance.sh"]
+
+  query = {
+    namespace = var.app_namespace
+    kube_config = var.cluster_config_file
+    bin_dir = module.setup_clis.bin_dir
+    created_by = local.created_by
+  }
+}
+
 resource null_resource argocd_instance_helm {
   depends_on = [null_resource.wait_for_crd, null_resource.wait-for-namespace]
 
   triggers = {
     namespace = var.app_namespace
-    name = "openshift-gitops"
+    name = var.app_namespace
     chart = "${path.module}/charts/argocd-instance"
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
+    created_by = local.created_by
+    skip = data.external.check_for_instance.result.exists
   }
 
   provisioner "local-exec" {
@@ -142,6 +166,8 @@ resource null_resource argocd_instance_helm {
       KUBECONFIG = self.triggers.kubeconfig
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
     }
   }
 
@@ -154,15 +180,17 @@ resource null_resource argocd_instance_helm {
       KUBECONFIG = self.triggers.kubeconfig
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
     }
   }
 }
 
-resource null_resource wait-for-deployment {
+resource null_resource wait-for-resources {
   depends_on = [null_resource.argocd_instance_helm]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-statefulset.sh ${var.app_namespace}"
+    command = "${path.module}/scripts/wait-for-resources.sh ${var.app_namespace} 'app.kubernetes.io/part-of=argocd'"
 
     environment = {
       BIN_DIR = module.setup_clis.bin_dir
@@ -172,7 +200,7 @@ resource null_resource wait-for-deployment {
 }
 
 data external argocd_config {
-  depends_on = [null_resource.wait-for-deployment]
+  depends_on = [null_resource.wait-for-resources]
 
   program = ["bash", "${path.module}/scripts/get-argocd-config.sh"]
 
@@ -184,7 +212,7 @@ data external argocd_config {
 }
 
 resource null_resource argocd-config {
-  depends_on = [null_resource.wait-for-deployment]
+  depends_on = [null_resource.wait-for-resources]
 
   triggers = {
     namespace = var.app_namespace
@@ -195,6 +223,7 @@ resource null_resource argocd-config {
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
+    skip = data.external.check_for_instance.result.exists
   }
 
   provisioner "local-exec" {
@@ -206,6 +235,8 @@ resource null_resource argocd-config {
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      SKIP = self.triggers.skip
+      VERSION = "0.13.0"
     }
   }
 
@@ -220,6 +251,7 @@ resource null_resource argocd-config {
       VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
+      SKIP = self.triggers.skip
     }
   }
 }
