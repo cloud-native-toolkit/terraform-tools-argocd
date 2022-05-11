@@ -16,9 +16,10 @@ jobs:
     strategy:
       matrix:
         testcase:
+          - ibm_ocp48
           - ibm_ocp49
+          - ibm_ocp410
       fail-fast: false
-      max-parallel: 1
 
     env:
       HOME: /home/devops
@@ -33,6 +34,7 @@ jobs:
         with:
           clusterId: ${{ matrix.testcase }}
           validateDeployScript: .github/scripts/validate-deploy.sh
+          testPlan: "true"
         env:
           TF_VAR_ibmcloud_api_key: ${{ secrets.IBMCLOUD_API_KEY }}
           IBMCLOUD_API_KEY: ${{ secrets.IBMCLOUD_API_KEY }}
