@@ -21,6 +21,7 @@ locals {
       subscription = {
         channel = "stable"
       }
+      createdBy = local.created_by
     }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
@@ -157,6 +158,11 @@ resource null_resource argocd_instance_helm {
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_instance.result.exists
+    values_file_content = yamlencode({
+      openshift-gitops-instance = {
+        createdBy = local.created_by
+      }
+    })
   }
 
   provisioner "local-exec" {
@@ -164,6 +170,7 @@ resource null_resource argocd_instance_helm {
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
       CREATED_BY = self.triggers.created_by
@@ -178,6 +185,7 @@ resource null_resource argocd_instance_helm {
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
       TMP_DIR = self.triggers.tmp_dir
       BIN_DIR = self.triggers.bin_dir
       CREATED_BY = self.triggers.created_by
