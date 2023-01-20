@@ -82,7 +82,7 @@ if [[ "${CLUSTER_TYPE}" =~ ocp4 ]] && [[ -n "${CONSOLE_LINK_NAME}" ]]; then
 fi
 
 echo "Logging in to argocd: ${ARGO_HOST} ${ARGO_PASSWORD}"
-argocd login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --grpc-web || exit 1
+argocd login "${ARGO_HOST}" --username "${ARGO_USERNAME}" --password "${ARGO_PASSWORD}" --insecure --grpc-web || exit 1
 
 if ! kubectl get configmap -n "${NAMESPACE}" argocd-config 1> /dev/null 2> /dev/null; then
   echo "ConfigMap not found: ${NAMESPACE}/argocd-config" >&2
