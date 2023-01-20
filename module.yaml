@@ -11,6 +11,9 @@ versions:
     - kubernetes
     - ocp3
     - ocp4
+  providers:
+    - name: clis
+      source: "cloud-native-toolkit/clis"
   dependencies:
     - id: cluster
       interface: github.com/cloud-native-toolkit/automation-modules#cluster

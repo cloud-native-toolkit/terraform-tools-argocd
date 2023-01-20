@@ -25,5 +25,5 @@ appVersion: 1.16.0
 dependencies:
   - name: openshift-gitops
     repository: https://charts.cloudnativetoolkit.dev/
-    version: 0.9.1
+    version: 0.10.0
     condition: openshift-gitops.enabled
