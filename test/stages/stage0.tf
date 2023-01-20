@@ -1,8 +1,3 @@
-terraform {
-  clis = {
-    source = "cloud-native-toolkit/clis"
-  }
-}
 
 data clis_check test_clis {
   clis = ["kubectl", "oc", "argocd"]
