@@ -1,7 +1,7 @@
 
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
-  bin_dir           = module.setup_clis.bin_dir
+  bin_dir           = data.clis_check.clis.bin_dir
   name              = "openshift-gitops"
   app_namespace     = "openshift-gitops"
   host              = data.external.argocd_config.result.host
@@ -9,6 +9,7 @@ locals {
   url_endpoint      = "https://${local.host}"
   grpc_url_endpoint = "https://${local.grpc_host}"
   created_by        = "argo-${random_string.random.result}"
+  disable_default_instance = true
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
@@ -22,6 +23,7 @@ locals {
         channel = "stable"
       }
       createdBy = local.created_by
+      disableDefaultInstance = local.disable_default_instance
     }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
@@ -37,10 +39,7 @@ locals {
   service_account_name = "${local.name}-argocd-application-controller"
 }
 
-module setup_clis {
-  source = "cloud-native-toolkit/clis/util"
-  version = "1.16.4"
-
+data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
 
@@ -50,7 +49,7 @@ data external check_for_operator {
   query = {
     kube_config = var.cluster_config_file
     namespace = "openshift-operators"
-    bin_dir = module.setup_clis.bin_dir
+    bin_dir = local.bin_dir
     created_by = local.created_by
   }
 }
@@ -58,7 +57,7 @@ data external check_for_operator {
 resource "random_string" "random" {
   length           = 16
   lower            = true
-  number           = true
+  numeric          = true
   upper            = false
   special          = false
 }
@@ -127,7 +126,7 @@ resource null_resource wait-for-namespace {
     command = "${path.module}/scripts/wait-for-namespace.sh ${var.app_namespace}"
 
     environment = {
-      BIN_DIR = module.setup_clis.bin_dir
+      BIN_DIR = local.bin_dir
       KUBECONFIG = var.cluster_config_file
     }
   }
@@ -141,7 +140,7 @@ data external check_for_instance {
   query = {
     namespace = var.app_namespace
     kube_config = var.cluster_config_file
-    bin_dir = module.setup_clis.bin_dir
+    bin_dir = local.bin_dir
     created_by = local.created_by
   }
 }
@@ -160,6 +159,7 @@ resource null_resource argocd_instance_helm {
     skip = data.external.check_for_instance.result.exists
     values_file_content = yamlencode({
       openshift-gitops-instance = {
+        disableDefaultInstance = local.disable_default_instance
         createdBy = local.created_by
       }
     })
@@ -201,7 +201,7 @@ resource null_resource wait-for-resources {
     command = "${path.module}/scripts/wait-for-resources.sh ${var.app_namespace} 'app.kubernetes.io/part-of=argocd'"
 
     environment = {
-      BIN_DIR = module.setup_clis.bin_dir
+      BIN_DIR = local.bin_dir
       KUBECONFIG = var.cluster_config_file
     }
   }
@@ -215,7 +215,7 @@ data external argocd_config {
   query = {
     namespace = var.app_namespace
     kube_config = var.cluster_config_file
-    bin_dir = module.setup_clis.bin_dir
+    bin_dir = local.bin_dir
   }
 }
 
