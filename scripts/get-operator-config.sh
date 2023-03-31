@@ -2,6 +2,8 @@
 
 INPUT=$(tee)
 
+set +e
+
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
 
 export PATH="${BIN_DIR}:${PATH}"
