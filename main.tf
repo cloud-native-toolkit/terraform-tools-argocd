@@ -3,8 +3,8 @@ locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = data.clis_check.clis.bin_dir
   name              = "argocd"
-  operator_namespace = length(regexall("^openshift", data.external.check_for_operator.result.packageName)) > 0 ? "openshift-operators" : "operators"
-  default_app_namespace = length(regexall("^openshift", data.external.check_for_operator.result.packageName)) > 0 ? "openshift-gitops" : "gitops"
+  operator_namespace = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0 ? "openshift-operators" : "operators"
+  default_app_namespace = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0 ? "openshift-gitops" : "gitops"
   app_namespace     = var.app_namespace != "" ? var.app_namespace : local.default_app_namespace
   host              = data.external.argocd_config.result.host
   grpc_host         = data.external.argocd_config.result.host
@@ -15,17 +15,17 @@ locals {
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
-      olmNamespace = data.external.check_for_operator.result.catalogSourceNamespace
-      operatorNamespace = var.operator_namespace
+      olmNamespace = data.external.get_operator_config.result.catalogSourceNamespace
+      operatorNamespace = local.operator_namespace
     }
     openshift-gitops = {
       enabled = true
       createInstance = false
       controllerRbac = true
       subscription = {
-        source  = data.external.check_for_operator.result.catalogSource
-        name    = data.external.check_for_operator.result.packageName
-        channel = data.external.check_for_operator.result.defaultChannel
+        source  = data.external.get_operator_config.result.catalogSource
+        name    = data.external.get_operator_config.result.packageName
+        channel = data.external.get_operator_config.result.defaultChannel
       }
       createdBy = local.created_by
       disableDefaultInstance = local.disable_default_instance
@@ -81,7 +81,7 @@ resource "random_string" "random" {
 resource null_resource argocd_operator_helm {
 
   triggers = {
-    namespace = var.operator_namespace
+    namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
     values_file_content = yamlencode(local.argocd_values)
