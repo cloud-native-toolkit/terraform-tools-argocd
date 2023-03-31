@@ -21,6 +21,17 @@ fi
 export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 
 count=0
+until kubectl get packagemanifest -A 1> /dev/null 2> /dev/null || [[ $count -gt 20 ]]; do
+  count=$((count + 1))
+  sleep 30
+done
+
+if [[ $count -gt 20 ]]; then
+  echo "Timed out waiting for packagemanifest crd" &>2
+  exit 1
+fi
+
+count=0
 until [[ $(kubectl get packagemanifest -A -o json | jq -c '. | length') -gt 0 ]] || [[ $count -gt 20 ]]; do
   count=$((count + 1))
   sleep 30
