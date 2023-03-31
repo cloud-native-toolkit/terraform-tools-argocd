@@ -20,8 +20,14 @@ fi
 
 export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 
-if ! kubectl get packagemanifest -A 1> /dev/null; then
-  echo "Error retrieving package manifests" &>2
+count=0
+until [[ $(kubectl get packagemanifest -A -o json | jq -c '. | length') -gt 0 ]] || [[ $count -gt 20 ]]; do
+  count=$((count + 1))
+  sleep 30
+done
+
+if [[ $count -gt 20 ]]; then
+  echo "Timed out waiting for packagemanifests" &>2
   exit 1
 fi
 
