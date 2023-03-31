@@ -21,7 +21,7 @@ fi
 export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 
 count=0
-until kubectl get crd packagemanifest 1> /dev/null || [[ $count -gt 20 ]]; do
+until kubectl get packagemanifest -A 1> /dev/null || [[ $count -gt 20 ]]; do
   count=$((count + 1))
   sleep 30
 done
