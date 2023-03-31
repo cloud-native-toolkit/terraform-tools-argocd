@@ -2,10 +2,7 @@
 
 INPUT=$(tee)
 
-export KUBECONFIG=$(echo "${INPUT}" | grep "kube_config" | sed -E 's/.*"kube_config": ?"([^"]*)".*/\1/g')
-NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
-CREATED_BY=$(echo "${INPUT}" | grep "created_by" | sed -E 's/.*"created_by": ?"([^"]*)".*/\1/g')
 
 if [[ -n "${BIN_DIR}" ]]; then
   export PATH="${BIN_DIR}:${PATH}"
@@ -21,15 +18,22 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
+export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
+NAMESPACE=$(echo "${INPUT}" | jq -r '.namespace')
+SUBSCRIPTION_NAME=$(echo "${INPUT}" | jq -r '.name')
+CREATED_BY=$(echo "${INPUT}" | jq -r '.created_by')
+
+
 ## check for Subscription
-SUBSCRIPTION_NAME="openshift-gitops-operator"
-SUBSCRIPTION=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTION_NAME}" -r '.items[] | select(.spec.name == $NAME) | .metadata.name // empty')
-SUBSCRIPTION_NAMESPACE=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTION_NAME}" -r '.items[] | select(.spec.name == $NAME) | .metadata.namespace // empty')
-SUBSCRIPTION_CREATED_BY=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTION_NAME}" -r '.items[] | select(.spec.name == $NAME) | .metadata.labels["created-by"] // empty')
+SUBSCRIPTION_DATA=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTION_NAME}" -c '.items[] | select(.spec.name == $NAME)')
+
+SUBSCRIPTION=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.name // empty')
+SUBSCRIPTION_NAMESPACE=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.namespace // empty')
+SUBSCRIPTION_CREATED_BY=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.labels["created-by"] // empty')
+CURRENT_CSV=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.status.currentCSV // empty')
 
 ## check for CSV
-CSV_NAME="openshift-gitops-operator"
-CSV=$(oc get csv -n "${NAMESPACE}" -o json | jq -r '.items[] | .metadata.name // empty' | grep "${CSV_NAME}")
+CSV=$(oc get csv -n "${SUBSCRIPTION_NAMESPACE}" "${CURRENT_CSV}" -o json | jq -r '.metadata.name // empty')
 
 ## check for CRD
 CRDS=$(oc get crd -o json | jq -r '.items[] | .metadata.name | select(. | test("argocds")) | .')
@@ -72,7 +76,7 @@ if [[ -n "${SUBSCRIPTION}" ]]; then
     exit 0
   fi
 elif [[ -n "${CSV}" ]]; then
-  echo "The OpenShift GitOps CSV is deployed but there is no subscription" >&2
+  echo "The ArgoCD CSV is deployed but there is no subscription" >&2
   exit 1
 else
   echo '{"exists": "false"}'

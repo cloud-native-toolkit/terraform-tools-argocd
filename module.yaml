@@ -21,17 +21,16 @@ versions:
     - id: olm
       refs:
         - source: github.com/ibm-garage-cloud/terraform-k8s-olm
-          version: ">= 1.2.2"
-    - id: namespace
-      discriminator: openshift-gitops
-      refs:
-        - source: github.com/ibm-garage-cloud/terraform-k8s-namespace
-          version: ">= 2.1.0"
+          version: ">= 2.0.0"
   variables:
     - name: cluster_config_file
       moduleRef:
         id: cluster
         output: config_file_path
+    - name: cluster_type
+      moduleRef:
+        id: cluster
+        output: platform.type_code
     - name: olm_namespace
       moduleRef:
         id: olm
@@ -40,7 +39,3 @@ versions:
       moduleRef:
         id: olm
         output: operator_namespace
-    - name: app_namespace
-      moduleRef:
-        id: namespace
-        output: name
