@@ -16,17 +16,18 @@ if ! command -v jq 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-TMP_DIR=$(echo "${INPUT}" | jq -r '.tmp_dir')
 export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 
-mkdir -p "${TMP_DIR}"
+if ! kubectl get packagemanifest -A 1> /dev/null; then
+  echo "Error retrieving package manifests" &>2
+  exit 1
+fi
 
-kubectl get packagemanifest -A -o json | \
-  jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]' > "${TMP_DIR}/argocd-packagemanifests.json"
+PACKAGE_MANIFEST=$(kubectl get packagemanifest -A -o json | jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]')
 
-OPERATOR_CONFIG=$(jq -c '.[] | select(.packageName == "openshift-gitops-operator")' "${TMP_DIR}/argocd-packagemanifests.json")
+OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c '.[] | select(.packageName == "openshift-gitops-operator")')
 if [[ -z "${OPERATOR_CONFIG}" ]]; then
-  OPERATOR_CONFIG=$(jq -c '.[] | select(.packageName == "argocd-operator")' "${TMP_DIR}/argocd-packagemanifests.json")
+  OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c '.[] | select(.packageName == "argocd-operator")')
 fi
 
 if [[ -z "${OPERATOR_CONFIG}" ]]; then
