@@ -9,8 +9,7 @@ enable OpenShift Auth. On Kubernetes, an ingress will be created.
 
 The module depends on the following software components:
 
-- terraform v12
-- kubectl
+- terraform v0.15
 
 ## Module dependencies
 
@@ -19,16 +18,16 @@ The module depends on the following software components:
 
 ## Example usage
 
-```hcl-terraform
-module "dev_tools_argocd" {
-  source = "github.com/ibm-garage-cloud/terraform-tools-argocd.git?ref=v1.0.0"
+See [example/](example) folder for full example usage
 
-  cluster_config_file = module.dev_cluster.config_file_path
-  cluster_type        = module.dev_cluster.type
-  app_namespace       = module.dev_cluster_namespaces.tools_namespace_name
-  ingress_subdomain   = module.dev_cluster.ingress_hostname
-  olm_namespace       = module.dev_software_olm.olm_namespace
-  operator_namespace  = module.dev_software_olm.target_namespace
+```hcl-terraform
+module "argocd" {
+  source = "github.com/ibm-garage-cloud/terraform-tools-argocd.git"
+
+  cluster_config_file = module.cluster.config_file_path
+  cluster_type        = module.cluster.platform.type_code
+  olm_namespace       = module.olm.olm_namespace
+  operator_namespace  = module.olm.target_namespace
   name                = "argocd"
 }
 ```
