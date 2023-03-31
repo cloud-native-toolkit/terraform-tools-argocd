@@ -2,7 +2,7 @@ module "dev_tools_argocd" {
   source = "../"
 
   cluster_config_file = module.cluster.config_file_path
-  cluster_TYPE        = module.cluster.platform.type_code
+  cluster_type        = module.cluster.platform.type_code
   olm_namespace       = module.olm.olm_namespace
   operator_namespace  = module.olm.target_namespace
   name                = "argocd"
