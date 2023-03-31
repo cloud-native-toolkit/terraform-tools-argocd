@@ -52,9 +52,10 @@ data external get_operator_config {
   program = ["bash", "${path.module}/scripts/get-operator-config.sh"]
 
   query = {
-    kube_config = var.cluster_config_file
-    bin_dir = local.bin_dir
-    tmp_dir = local.tmp_dir
+    kube_config   = var.cluster_config_file
+    olm_namespace = var.olm_namespace
+    bin_dir       = local.bin_dir
+    tmp_dir       = local.tmp_dir
   }
 }
 
