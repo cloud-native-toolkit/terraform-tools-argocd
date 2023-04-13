@@ -2,9 +2,10 @@
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = data.clis_check.clis.bin_dir
-  name              = "argocd"
-  operator_namespace = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0 ? "openshift-operators" : "operators"
-  default_app_namespace = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0 ? "openshift-gitops" : "gitops"
+  openshift_cluster = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0
+  name              = local.openshift_cluster ? "openshift-gitops" : "argocd"
+  operator_namespace = local.openshift_cluster ? "openshift-operators" : "operators"
+  default_app_namespace = local.openshift_cluster ? "openshift-gitops" : "gitops"
   app_namespace     = var.app_namespace != "" ? var.app_namespace : local.default_app_namespace
   host              = data.external.argocd_config.result.host
   grpc_host         = data.external.argocd_config.result.host
@@ -182,7 +183,11 @@ resource null_resource argocd_instance_helm {
     values_file_content = yamlencode({
       openshift-gitops-instance = {
         disableDefaultInstance = local.disable_default_instance
+        enabled: local.openshift_cluster
         createdBy = local.created_by
+      }
+      argocd-instance = {
+        enabled: !local.openshift_cluster
       }
     })
   }

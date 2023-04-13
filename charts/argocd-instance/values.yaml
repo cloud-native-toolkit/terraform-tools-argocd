@@ -4,3 +4,7 @@
 
 openshift-gitops-instance:
   disableDefaultInstance: true
+  enabled: true
+
+argocd-instance:
+  enabled: false
