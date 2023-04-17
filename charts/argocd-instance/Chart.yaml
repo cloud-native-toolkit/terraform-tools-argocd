@@ -29,5 +29,5 @@ dependencies:
     condition: openshift-gitops-instance.enabled
   - name: argocd-instance
     repository: https://charts.cloudnativetoolkit.dev/
-    version: 0.1.0
+    version: 0.1.1
     condition: argocd-instance.enabled
