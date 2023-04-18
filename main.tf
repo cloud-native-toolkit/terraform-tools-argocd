@@ -182,8 +182,8 @@ resource null_resource argocd_instance_helm {
     skip = data.external.check_for_instance.result.exists
     values_file_content = yamlencode({
       openshift-gitops-instance = {
+        enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
-        enabled: local.openshift_cluster
         createdBy = local.created_by
       }
       argocd-instance = {
