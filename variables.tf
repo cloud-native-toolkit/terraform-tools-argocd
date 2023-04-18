@@ -9,7 +9,7 @@ variable "ingress_subdomain" {
   default     = ""
 }
 
-variable "tsl_secret_name" {
+variable "tls_secret_name" {
   type        = string
   description = "The name of the secret containing the tls information"
   default     = ""
