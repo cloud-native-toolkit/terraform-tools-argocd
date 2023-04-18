@@ -4,6 +4,6 @@ dependencies:
   version: 0.7.0
 - name: argocd-instance
   repository: https://charts.cloudnativetoolkit.dev/
-  version: 0.1.1
-digest: sha256:d3e0634ccc5c0440001bf78f4166802e27587f143ca88d20ac7bcbbf657fa8db
-generated: "2023-04-17T16:51:46.816754-05:00"
+  version: 0.1.2
+digest: sha256:9f275bdf974d0425ca49fa3f03c4f83853e06b12081c06f84390d2a4c8fb281e
+generated: "2023-04-18T12:09:24.225059-05:00"

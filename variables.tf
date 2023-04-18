@@ -3,6 +3,12 @@ variable "cluster_config_file" {
   description = "Cluster config file for Kubernetes cluster."
 }
 
+variable "ingress_subdomain" {
+  type        = string
+  description = "The subdomain to be used to create the ingress for the ArgoCD instance. (Needed to create ingress for k8s deployments)"
+  default     = ""
+}
+
 variable "cluster_type" {
   type        = string
   description = "The type of cluster (openshift or kubernetes)"

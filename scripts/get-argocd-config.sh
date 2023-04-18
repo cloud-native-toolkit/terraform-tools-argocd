@@ -30,6 +30,7 @@ until kubectl get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
 done
 
 ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .metadata.name' | head -n 1)
+HOST=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .status.host' | head -n 1)
 
 if [[ -z "${ARGOCD_NAME}" ]]; then
   echo "ArgoCD name not found in namespace ${NAMESPACE}" >&2
@@ -54,22 +55,24 @@ PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r
 
 LABEL="app.kubernetes.io/part-of=argocd"
 
-count=0
-while true; do
-  if [[ $count -eq 20 ]]; then
-    echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
-    exit 200
-  fi
+if [[ -z "${HOST}" ]]; then
+  count=0
+  while true; do
+    if [[ $count -eq 20 ]]; then
+      echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
+      exit 200
+    fi
 
-  count=$((count + 1))
+    count=$((count + 1))
 
-  ROUTE_COUNT=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
-  if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
-    break
-  fi
-  sleep 30
-done
+    ROUTE_COUNT=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
+    if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
+      break
+    fi
+    sleep 30
+  done
 
-HOST=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
+  HOST=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
+fi
 
 echo "{\"host\": \"${HOST}\", \"password\": \"${PASSWORD}\"}"

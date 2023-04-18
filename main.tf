@@ -187,7 +187,17 @@ resource null_resource argocd_instance_helm {
         createdBy = local.created_by
       }
       argocd-instance = {
-        enabled: !local.openshift_cluster
+        enabled = !local.openshift_cluster
+        argocd = {
+          spec = {
+            server = {
+              host = "${local.name}.${var.ingress_subdomain}"
+              ingress = {
+                enabled = var.ingress_subdomain != ""
+              }
+            }
+          }
+        }
       }
     })
   }

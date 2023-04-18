@@ -31,6 +31,10 @@ versions:
       moduleRef:
         id: cluster
         output: platform.type_code
+    - name: ingress_subdomain
+      moduleRef:
+        id: cluster
+        output: platform.ingress
     - name: olm_namespace
       moduleRef:
         id: olm
