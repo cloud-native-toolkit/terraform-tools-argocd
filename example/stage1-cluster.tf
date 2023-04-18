@@ -12,3 +12,9 @@ resource null_resource output_kubeconfig {
     command = "echo '${module.cluster.platform.kubeconfig}' > .kubeconfig"
   }
 }
+
+resource null_resource output_cluster_type {
+  provisioner "local-exec" {
+    command = "echo '${module.cluster.platform.type_code}' > .cluster_type"
+  }
+}

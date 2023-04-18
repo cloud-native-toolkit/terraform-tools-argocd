@@ -25,7 +25,9 @@ if ! command -v argocd 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" | sed 's/"//g')
+CLUSTER_TYPE=$(cat ./.cluster_type)
+
+echo "Cluster type: $CLUSTER_TYPE"
 
 echo "listing directory contents"
 ls -A
