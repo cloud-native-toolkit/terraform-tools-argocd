@@ -43,6 +43,7 @@ if [[ $count -gt 20 ]]; then
 fi
 
 PACKAGE_MANIFEST=$(kubectl get packagemanifest -A -o json | jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]')
+kubectl get packagemanifest -A -o json | jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]' >&2
 
 OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c '.[] | select(.packageName == "openshift-gitops-operator")')
 if [[ -z "${OPERATOR_CONFIG}" ]]; then
