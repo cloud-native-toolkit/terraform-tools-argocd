@@ -68,7 +68,7 @@ echo "Validating argo endpoints:"
 echo "${ENDPOINTS}"
 
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
-  kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{"https://"}{.host}{"\n"}{end}{end}' | while read endpoint; do
+  kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}' | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
       "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 10 10
     fi
