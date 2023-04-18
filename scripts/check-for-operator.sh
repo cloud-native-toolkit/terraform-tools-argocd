@@ -29,6 +29,7 @@ SUBSCRIPTION_DATA=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTI
 
 if [[ -z "${SUBSCRIPTION_DATA}" ]]; then
   echo "Unable to find subscription with name: ${SUBSCRIPTION_NAME}" >&2
+  echo '{"exists": "false"}'
   exit 0
 fi
 
