@@ -27,10 +27,20 @@ CREATED_BY=$(echo "${INPUT}" | jq -r '.created_by')
 ## check for Subscription
 SUBSCRIPTION_DATA=$(oc get subscription -A -o json | jq --arg NAME "${SUBSCRIPTION_NAME}" -c '.items[] | select(.spec.name == $NAME)')
 
+if [[ -z "${SUBSCRIPTION_DATA}" ]]; then
+  echo "Unable to find subscription with name: ${SUBSCRIPTION_NAME}" >&2
+  exit 1
+fi
+
 SUBSCRIPTION=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.name // empty')
 SUBSCRIPTION_NAMESPACE=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.namespace // empty')
 SUBSCRIPTION_CREATED_BY=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.metadata.labels["created-by"] // empty')
 CURRENT_CSV=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.status.currentCSV // empty')
+
+if [[ -z "${CURRENT_CSV}" ]]; then
+  echo "Unable to find current csv name" >&2
+  exit 1
+fi
 
 ## check for CSV
 CSV=$(oc get csv -n "${SUBSCRIPTION_NAMESPACE}" "${CURRENT_CSV}" -o json | jq -r '.metadata.name // empty')
