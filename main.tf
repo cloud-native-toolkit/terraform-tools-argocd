@@ -192,7 +192,7 @@ resource null_resource argocd_instance_helm {
           spec = {
             tls = {
               ca = {
-                secretName = var.tsl_secret_name
+                secretName = var.tls_secret_name
               }
             }
             server = {
