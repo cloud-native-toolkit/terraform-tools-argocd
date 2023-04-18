@@ -39,6 +39,10 @@ CURRENT_CSV=$(echo "${SUBSCRIPTION_DATA}" | jq -r '.status.currentCSV // empty')
 
 if [[ -z "${CURRENT_CSV}" ]]; then
   echo "Unable to find current csv name" >&2
+  echo "  Subscription: $SUBSCRIPTION" >&2
+  echo "  Namespace: $SUBSCRIPTION_NAMESPACE" >&2
+  echo "  Created by: $SUBSCRIPTION_CREATED_BY" >&2
+  echo "  Current CSV: $CURRENT_CSV" >&2
   exit 1
 fi
 
