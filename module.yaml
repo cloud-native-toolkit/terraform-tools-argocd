@@ -35,6 +35,10 @@ versions:
       moduleRef:
         id: cluster
         output: platform.ingress
+    - name: tls_secret_name
+      moduleRef:
+        id: cluster
+        output: platform.tls_secret
     - name: olm_namespace
       moduleRef:
         id: olm

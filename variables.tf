@@ -9,6 +9,12 @@ variable "ingress_subdomain" {
   default     = ""
 }
 
+variable "tsl_secret_name" {
+  type        = string
+  description = "The name of the secret containing the tls information"
+  default     = ""
+}
+
 variable "cluster_type" {
   type        = string
   description = "The type of cluster (openshift or kubernetes)"
