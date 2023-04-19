@@ -36,7 +36,6 @@ until kubectl get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
 done
 
 ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .metadata.name' | head -n 1)
-HOST=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .status.host // empty' | head -n 1)
 
 if [[ -z "${ARGOCD_NAME}" ]]; then
   echo "ArgoCD name not found in namespace ${NAMESPACE}" >&2
@@ -65,7 +64,7 @@ if [[ -z "${HOST}" ]]; then
   count=0
   while true; do
     if [[ $count -eq 20 ]]; then
-      echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
+      echo "{\"message\": \"Timed out waiting for ingress/route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
       exit 200
     fi
 
