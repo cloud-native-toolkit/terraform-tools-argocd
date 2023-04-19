@@ -199,6 +199,10 @@ resource null_resource argocd_instance_helm {
               host = "${local.name}.${var.ingress_subdomain}"
               ingress = {
                 enabled = var.ingress_subdomain != ""
+                annotations = {
+                  nginx.ingress.kubernetes.io/backend-protocol = "HTTPS"
+                  nginx.ingress.kubernetes.io/force-ssl-redirect = "true"
+                }
               }
             }
           }
