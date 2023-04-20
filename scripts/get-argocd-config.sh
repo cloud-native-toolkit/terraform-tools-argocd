@@ -2,11 +2,10 @@
 
 INPUT=$(tee)
 
-export KUBECONFIG=$(echo "${INPUT}" | grep "kube_config" | sed -E 's/.*"kube_config": ?"([^"]*)".*/\1/g')
-NAMESPACE=$(echo "${INPUT}" | grep "namespace" | sed -E 's/.*"namespace": ?"([^"]*)".*/\1/g')
 BIN_DIR=$(echo "${INPUT}" | grep "bin_dir" | sed -E 's/.*"bin_dir": ?"([^"]*)".*/\1/g')
 
 export PATH="${BIN_DIR}:${PATH}"
+
 
 if ! command -v kubectl 1> /dev/null 2> /dev/null; then
   echo "kubectl cli not found" >&2
@@ -16,6 +15,13 @@ fi
 if ! command -v jq 1> /dev/null 2> /dev/null; then
   echo "jq cli not found" >&2
   exit 1
+fi
+
+export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
+NAMESPACE=$(echo "${INPUT}" | jq -r '.namespace')
+CLUSTER_TYPE="kubernetes"
+if kubectl get route -A 1> /dev/null 2> /dev/null; then
+  CLUSTER_TYPE="ocp"
 fi
 
 count=0
@@ -54,22 +60,35 @@ PASSWORD=$(kubectl get secret "${SECRET_NAME}" -n "${NAMESPACE}" -o json | jq -r
 
 LABEL="app.kubernetes.io/part-of=argocd"
 
-count=0
-while true; do
-  if [[ $count -eq 20 ]]; then
-    echo "{\"message\": \"Timed out waiting for route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
-    exit 200
+if [[ -z "${HOST}" ]]; then
+  count=0
+  while true; do
+    if [[ $count -eq 20 ]]; then
+      echo "{\"message\": \"Timed out waiting for ingress/route with label '${LABEL}' in namespace ${NAMESPACE}\"}" >&2
+      exit 200
+    fi
+
+    count=$((count + 1))
+
+    if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
+      INGRESS_COUNT=$(kubectl get ingress -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
+      if [[ "${INGRESS_COUNT}" -gt 0 ]]; then
+        break
+      fi
+    else
+      ROUTE_COUNT=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
+      if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
+        break
+      fi
+    fi
+    sleep 30
+  done
+
+  if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
+    HOST=$(kubectl get ingress -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.rules[0].host')
+  else
+    HOST=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
   fi
-
-  count=$((count + 1))
-
-  ROUTE_COUNT=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq '.items | length')
-  if [[ "${ROUTE_COUNT}" -gt 0 ]]; then
-    break
-  fi
-  sleep 30
-done
-
-HOST=$(kubectl get route -l "${LABEL}" -n "${NAMESPACE}" -o json | jq -r '.items[0] | .spec.host')
+fi
 
 echo "{\"host\": \"${HOST}\", \"password\": \"${PASSWORD}\"}"

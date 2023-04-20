@@ -25,7 +25,9 @@ if ! command -v argocd 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
-CLUSTER_TYPE=$(cat ./terraform.tfvars | grep "cluster_type" | sed -E "s/.*=//g" | sed 's/"//g')
+CLUSTER_TYPE=$(cat ./.cluster_type)
+
+echo "Cluster type: $CLUSTER_TYPE"
 
 echo "listing directory contents"
 ls -A
@@ -65,11 +67,19 @@ fi
 echo "Validating argo endpoints:"
 echo "${ENDPOINTS}"
 
-kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
-  if [[ -n "${endpoint}" ]]; then
-    "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 10 10
-  fi
-done
+if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
+  kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}' | while read endpoint; do
+    if [[ -n "${endpoint}" ]]; then
+      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 10 10
+    fi
+  done
+else
+  kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
+    if [[ -n "${endpoint}" ]]; then
+      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 10 10
+    fi
+  done
+fi
 
 echo "Endpoints validated"
 

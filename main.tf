@@ -2,8 +2,11 @@
 locals {
   tmp_dir           = "${path.cwd}/.tmp"
   bin_dir           = data.clis_check.clis.bin_dir
-  name              = "openshift-gitops"
-  app_namespace     = "openshift-gitops"
+  openshift_cluster = length(regexall("^openshift", data.external.get_operator_config.result.packageName)) > 0
+  name              = local.openshift_cluster ? "openshift-gitops" : "argocd"
+  operator_namespace = local.openshift_cluster ? "openshift-operators" : "operators"
+  default_app_namespace = local.openshift_cluster ? "openshift-gitops" : "gitops"
+  app_namespace     = var.app_namespace != "" ? var.app_namespace : local.default_app_namespace
   host              = data.external.argocd_config.result.host
   grpc_host         = data.external.argocd_config.result.host
   url_endpoint      = "https://${local.host}"
@@ -13,14 +16,17 @@ locals {
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
-      operatorNamespace = var.operator_namespace
+      olmNamespace = data.external.get_operator_config.result.catalogSourceNamespace
+      operatorNamespace = local.operator_namespace
     }
     openshift-gitops = {
       enabled = true
       createInstance = false
       controllerRbac = true
       subscription = {
-        channel = "stable"
+        source  = data.external.get_operator_config.result.catalogSource
+        name    = data.external.get_operator_config.result.packageName
+        channel = data.external.get_operator_config.result.defaultChannel
       }
       createdBy = local.created_by
       disableDefaultInstance = local.disable_default_instance
@@ -43,14 +49,25 @@ data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
 
+data external get_operator_config {
+  program = ["bash", "${path.module}/scripts/get-operator-config.sh"]
+
+  query = {
+    kube_config   = var.cluster_config_file
+    olm_namespace = var.olm_namespace
+    bin_dir       = local.bin_dir
+  }
+}
+
 data external check_for_operator {
   program = ["bash", "${path.module}/scripts/check-for-operator.sh"]
 
   query = {
     kube_config = var.cluster_config_file
-    namespace = "openshift-operators"
-    bin_dir = local.bin_dir
-    created_by = local.created_by
+    namespace   = local.operator_namespace
+    name        = data.external.get_operator_config.result.packageName
+    bin_dir     = local.bin_dir
+    created_by  = local.created_by
   }
 }
 
@@ -65,7 +82,7 @@ resource "random_string" "random" {
 resource null_resource argocd_operator_helm {
 
   triggers = {
-    namespace = var.operator_namespace
+    namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
     values_file_content = yamlencode(local.argocd_values)
@@ -119,11 +136,17 @@ resource null_resource wait_for_crd {
   }
 }
 
-resource null_resource wait-for-namespace {
+module app_namespace {
   depends_on = [null_resource.argocd_operator_helm]
+  source = "github.com/cloud-native-toolkit/terraform-k8s-namespace.git"
 
+  cluster_config_file_path = var.cluster_config_file
+  name                     = local.app_namespace
+}
+
+resource null_resource wait_for_namespace {
   provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-namespace.sh ${var.app_namespace}"
+    command = "${path.module}/scripts/wait-for-namespace.sh ${module.app_namespace.name}"
 
     environment = {
       BIN_DIR = local.bin_dir
@@ -133,12 +156,12 @@ resource null_resource wait-for-namespace {
 }
 
 data external check_for_instance {
-  depends_on = [null_resource.wait_for_crd, null_resource.wait-for-namespace]
+  depends_on = [null_resource.wait_for_crd, null_resource.wait_for_namespace]
 
   program = ["bash", "${path.module}/scripts/check-for-instance.sh"]
 
   query = {
-    namespace = var.app_namespace
+    namespace = module.app_namespace.name
     kube_config = var.cluster_config_file
     bin_dir = local.bin_dir
     created_by = local.created_by
@@ -146,11 +169,11 @@ data external check_for_instance {
 }
 
 resource null_resource argocd_instance_helm {
-  depends_on = [null_resource.wait_for_crd, null_resource.wait-for-namespace]
+  depends_on = [null_resource.wait_for_crd, null_resource.wait_for_namespace]
 
   triggers = {
-    namespace = var.app_namespace
-    name = var.app_namespace
+    namespace = module.app_namespace.name
+    name = module.app_namespace.name
     chart = "${path.module}/charts/argocd-instance"
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
@@ -159,8 +182,31 @@ resource null_resource argocd_instance_helm {
     skip = data.external.check_for_instance.result.exists
     values_file_content = yamlencode({
       openshift-gitops-instance = {
+        enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
         createdBy = local.created_by
+      }
+      argocd-instance = {
+        enabled = !local.openshift_cluster
+        argocd = {
+          spec = {
+            tls = {
+              ca = {
+                secretName = var.tls_secret_name
+              }
+            }
+            server = {
+              host = "${local.name}.${var.ingress_subdomain}"
+              ingress = {
+                enabled = var.ingress_subdomain != ""
+                annotations = {
+                  "nginx.ingress.kubernetes.io/backend-protocol" = "HTTPS"
+                  "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
+                }
+              }
+            }
+          }
+        }
       }
     })
   }
@@ -194,11 +240,11 @@ resource null_resource argocd_instance_helm {
   }
 }
 
-resource null_resource wait-for-resources {
+resource null_resource wait_for_resources {
   depends_on = [null_resource.argocd_instance_helm]
 
   provisioner "local-exec" {
-    command = "${path.module}/scripts/wait-for-resources.sh ${var.app_namespace} 'app.kubernetes.io/part-of=argocd'"
+    command = "${path.module}/scripts/wait-for-resources.sh ${module.app_namespace.name} 'app.kubernetes.io/part-of=argocd'"
 
     environment = {
       BIN_DIR = local.bin_dir
@@ -208,22 +254,22 @@ resource null_resource wait-for-resources {
 }
 
 data external argocd_config {
-  depends_on = [null_resource.wait-for-resources]
+  depends_on = [null_resource.wait_for_resources]
 
   program = ["bash", "${path.module}/scripts/get-argocd-config.sh"]
 
   query = {
-    namespace = var.app_namespace
+    namespace = module.app_namespace.name
     kube_config = var.cluster_config_file
     bin_dir = local.bin_dir
   }
 }
 
-resource null_resource argocd-config {
-  depends_on = [null_resource.wait-for-resources]
+resource null_resource argocd_config {
+  depends_on = [null_resource.wait_for_resources]
 
   triggers = {
-    namespace = var.app_namespace
+    namespace = module.app_namespace.name
     name = "argocd-config"
     chart = "tool-config"
     repository = "https://charts.cloudnativetoolkit.dev"

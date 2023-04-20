@@ -1,10 +1,12 @@
 module "dev_tools_argocd" {
-  source = "./module"
+  source = "../"
 
-  cluster_config_file = module.dev_cluster.config_file_path
-  olm_namespace       = module.dev_software_olm.olm_namespace
-  operator_namespace  = module.dev_software_olm.target_namespace
-  app_namespace       = module.dev_tools_namespace.name
+  cluster_config_file = module.cluster.config_file_path
+  cluster_type        = module.cluster.platform.type_code
+  ingress_subdomain   = module.cluster.platform.ingress
+  tls_secret_name     = module.cluster.platform.tls_secret
+  olm_namespace       = module.olm.olm_namespace
+  operator_namespace  = module.olm.target_namespace
   name                = "argocd"
 }
 
