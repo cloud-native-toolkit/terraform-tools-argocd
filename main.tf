@@ -188,16 +188,16 @@ resource null_resource argocd_instance_helm {
       }
       argocd-instance = {
         enabled = !local.openshift_cluster
+        ingress = {
+          host = "${local.name}.${var.ingress_subdomain}"
+          tls_secret = var.tls_secret_name
+        }
         argocd = {
           spec = {
             server = {
-              host = "${local.name}.${var.ingress_subdomain}"
+              host = "${local.name}-default.${var.ingress_subdomain}"
               ingress = {
                 enabled = var.ingress_subdomain != ""
-                annotations = {
-                  "nginx.ingress.kubernetes.io/backend-protocol" = "HTTPS"
-                  "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
-                }
               }
             }
           }
