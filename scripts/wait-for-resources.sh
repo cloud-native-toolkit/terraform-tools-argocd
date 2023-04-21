@@ -11,8 +11,8 @@ kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq 
   kind=$(echo "${resource}" | jq -r '.kind' | tr '[:upper:]' '[:lower:]')
   name=$(echo "${resource}" | jq -r '.name')
 
-  echo "Waiting for ${kind}/${name} in ${NAMESPACE} with 2h timeout"
-  kubectl rollout status -n "${NAMESPACE}" "${kind}/${name}" --timeout=2h || exit 1
+  echo "Waiting for ${kind}/${name} in ${NAMESPACE} with 1h timeout"
+  kubectl rollout status -n "${NAMESPACE}" "${kind}/${name}" --timeout=1h || exit 1
 done
 
 # do it again in case there are new ones
