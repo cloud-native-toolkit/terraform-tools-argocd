@@ -7,7 +7,7 @@ export PATH="${BIN_DIR}:${PATH}"
 
 sleep 30
 
-kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq -c '.[] | {"kind": .kind, "name": .metadata.name}' | while read resource; do
+kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq -c '.items[] | {"kind": .kind, "name": .metadata.name}' | while read resource; do
   kind=$(echo "${resource}" | jq -r '.kind')
   name=$(echo "${resource}" | jq -r '.name')
 
@@ -16,7 +16,7 @@ kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq 
 done
 
 # do it again in case there are new ones
-kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq -c '.[] | {"kind": .kind, "name": .metadata.name}' | while read resource; do
+kubectl get statefulset,deployment -n "${NAMESPACE}" -l "${LABEL}" -o json | jq -c '.items[] | {"kind": .kind, "name": .metadata.name}' | while read resource; do
   kind=$(echo "${resource}" | jq -r '.kind')
   name=$(echo "${resource}" | jq -r '.name')
 
