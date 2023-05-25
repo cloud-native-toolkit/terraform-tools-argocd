@@ -9,7 +9,7 @@ if [[ -z "${WAIT_TIME}" ]]; then
 fi
 
 if [[ -z "${WAIT_COUNT}" ]]; then
-  WAIT_COUNT=20
+  WAIT_COUNT=40
 fi
 
 count=0
