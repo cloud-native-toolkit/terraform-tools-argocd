@@ -85,7 +85,7 @@ resource null_resource argocd_operator_helm {
     namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file_content = yamlencode(local.argocd_values)
+    values_file_content = nonsensitive(yamlencode(local.argocd_values))
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
