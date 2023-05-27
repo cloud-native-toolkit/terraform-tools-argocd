@@ -3,6 +3,7 @@
 URL="$1"
 WAIT_TIME=$2
 WAIT_COUNT=$3
+NAMESPACE="$4"
 
 if [[ -z "${WAIT_TIME}" ]]; then
   WAIT_TIME=15
@@ -20,6 +21,10 @@ until curl -X GET -Iqs --insecure "${URL}" | grep -q -E "403|200" || \
   [[ $count -eq ${WAIT_COUNT} ]]
 do
     echo ">>> waiting for ${URL} to be available"
+
+    if [[ -n "${NAMESPACE}" ]]; then
+      k get deployment,pod,service -n "${NAMESPACE}"
+    fi
     sleep ${WAIT_TIME}
     count=$((count + 1))
 done
