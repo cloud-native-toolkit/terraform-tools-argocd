@@ -93,6 +93,7 @@ resource null_resource argocd_operator_helm {
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_operator.result.exists
+    subscription_name = data.external.get_operator_config.result.packageName
   }
 
   provisioner "local-exec" {
@@ -111,7 +112,7 @@ resource null_resource argocd_operator_helm {
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-operator.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+    command = "${path.module}/scripts/destroy-operator.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.subscription_name}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
