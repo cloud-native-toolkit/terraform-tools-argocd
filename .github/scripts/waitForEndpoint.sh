@@ -29,7 +29,7 @@ done
 if [[ $count -eq ${WAIT_COUNT} ]]; then
   echo ">>> Retry count exceeded. ${URL} not available"
   if [[ -n "${NAMESPACE}" ]]; then
-    k get deployment,pod,service -n "${NAMESPACE}" -o yaml
+    kubectl get deployment,pod,service -n "${NAMESPACE}" -o yaml
   fi
   exit 1
 else
