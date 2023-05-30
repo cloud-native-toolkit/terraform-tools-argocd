@@ -70,13 +70,13 @@ echo "${ENDPOINTS}"
 if [[ "${CLUSTER_TYPE}" == "kubernetes" ]] || [[ "${CLUSTER_TYPE}" =~ iks.* ]]; then
   kubectl get ingress -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{range .spec.rules[*]}{.host}{"\n"}{end}{end}' | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
-      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 30 30
+      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 30 30 "${NAMESPACE}"
     fi
   done
 else
   kubectl get route -n "${NAMESPACE}" -o jsonpath='{range .items[*]}{.spec.host}{.spec.path}{"\n"}{end}' | while read endpoint; do
     if [[ -n "${endpoint}" ]]; then
-      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 30 30
+      "${SCRIPT_DIR}/waitForEndpoint.sh" "https://${endpoint}" 30 30 "${NAMESPACE}"
     fi
   done
 fi

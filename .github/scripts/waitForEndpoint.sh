@@ -22,15 +22,15 @@ until curl -X GET -Iqs --insecure "${URL}" | grep -q -E "403|200" || \
 do
     echo ">>> waiting for ${URL} to be available"
 
-    if [[ -n "${NAMESPACE}" ]]; then
-      k get deployment,pod,service -n "${NAMESPACE}"
-    fi
     sleep ${WAIT_TIME}
     count=$((count + 1))
 done
 
 if [[ $count -eq ${WAIT_COUNT} ]]; then
   echo ">>> Retry count exceeded. ${URL} not available"
+  if [[ -n "${NAMESPACE}" ]]; then
+    k get deployment,pod,service -n "${NAMESPACE}" -o yaml
+  fi
   exit 1
 else
   echo ">>> ${URL} is available"
