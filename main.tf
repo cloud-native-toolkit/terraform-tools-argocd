@@ -13,6 +13,7 @@ locals {
   grpc_url_endpoint = "https://${local.grpc_host}"
   created_by        = "argo-${random_string.random.result}"
   disable_default_instance = true
+  disable_dex = !local.openshift_cluster
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
@@ -30,6 +31,7 @@ locals {
       }
       createdBy = local.created_by
       disableDefaultInstance = local.disable_default_instance
+      disableDex = local.disable_dex
     }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
