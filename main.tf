@@ -14,18 +14,6 @@ locals {
   created_by        = "argo-${random_string.random.result}"
   disable_default_instance = true
   disable_dex = !local.openshift_cluster
-  dex_config = local.openshift_cluster ? {
-    resources = {
-      limits = {
-        cpu    = "500m"
-        memory = "256Mi"
-      }
-      requests = {
-        cpu    = "250m"
-        memory = "128Mi"
-      }
-    }
-  } : {}
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
@@ -209,7 +197,6 @@ resource null_resource argocd_instance_helm {
         }
         argocd = {
           spec = {
-            dex = local.dex_config
             server = {
               host = "${local.name}-default.${var.ingress_subdomain}"
               ingress = {
