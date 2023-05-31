@@ -20,6 +20,10 @@ fi
 
 VALUES_FILE="${TMP_DIR}/${NAME}-values.yaml"
 
+echo "---"
+echo "${VALUES_FILE_CONTENT}"
+echo "---"
+
 echo "${VALUES_FILE_CONTENT}" > "${VALUES_FILE}"
 
 if ! command -v helm 1> /dev/null 2> /dev/null; then

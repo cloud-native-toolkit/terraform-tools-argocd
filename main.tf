@@ -13,6 +13,7 @@ locals {
   grpc_url_endpoint = "https://${local.grpc_host}"
   created_by        = "argo-${random_string.random.result}"
   disable_default_instance = true
+  disable_dex = !local.openshift_cluster
   argocd_values       = {
     global = {
       clusterType = var.cluster_type
@@ -30,6 +31,7 @@ locals {
       }
       createdBy = local.created_by
       disableDefaultInstance = local.disable_default_instance
+      disableDex = local.disable_dex
     }
   }
   argocd_values_file = "${local.tmp_dir}/values-argocd.yaml"
@@ -85,12 +87,13 @@ resource null_resource argocd_operator_helm {
     namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file_content = yamlencode(local.argocd_values)
+    values_file_content = nonsensitive(yamlencode(local.argocd_values))
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_operator.result.exists
+    subscription_name = data.external.get_operator_config.result.packageName
   }
 
   provisioner "local-exec" {
@@ -109,7 +112,7 @@ resource null_resource argocd_operator_helm {
   provisioner "local-exec" {
     when = destroy
 
-    command = "${path.module}/scripts/destroy-operator.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+    command = "${path.module}/scripts/destroy-operator.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart} ${self.triggers.subscription_name}"
 
     environment = {
       KUBECONFIG = self.triggers.kubeconfig
@@ -180,7 +183,7 @@ resource null_resource argocd_instance_helm {
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_instance.result.exists
-    values_file_content = yamlencode({
+    values_file_content = nonsensitive(yamlencode({
       openshift-gitops-instance = {
         enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
@@ -190,25 +193,24 @@ resource null_resource argocd_instance_helm {
         enabled = !local.openshift_cluster
         argocd = {
           spec = {
-            tls = {
-              ca = {
-                secretName = var.tls_secret_name
-              }
-            }
             server = {
               host = "${local.name}.${var.ingress_subdomain}"
               ingress = {
                 enabled = var.ingress_subdomain != ""
-                annotations = {
+                annotations = var.tls_secret_name != null && var.tls_secret_name != "" ? {
                   "nginx.ingress.kubernetes.io/backend-protocol" = "HTTPS"
                   "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
-                }
+                } : {}
+                tls = var.tls_secret_name != null && var.tls_secret_name != "" ? [{
+                  hosts = ["${local.name}.${var.ingress_subdomain}"]
+                  secretName = var.tls_secret_name
+                }] : []
               }
             }
           }
         }
       }
-    })
+    }))
   }
 
   provisioner "local-exec" {
