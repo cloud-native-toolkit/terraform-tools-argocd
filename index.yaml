@@ -22,6 +22,97 @@ versions:
       - id: olm
         refs:
           - source: github.com/ibm-garage-cloud/terraform-k8s-olm
+            version: '>= 2.0.0'
+    variables:
+      - name: cluster_config_file
+        type: string
+        description: Cluster config file for Kubernetes cluster.
+        moduleRef:
+          id: cluster
+          output: config_file_path
+      - name: ingress_subdomain
+        type: string
+        description: >-
+          The subdomain to be used to create the ingress for the ArgoCD
+          instance. (Needed to create ingress for k8s deployments)
+        default: ''
+        moduleRef:
+          id: cluster
+          output: platform.ingress
+      - name: tls_secret_name
+        type: string
+        description: The name of the secret containing the tls information
+        default: ''
+        moduleRef:
+          id: cluster
+          output: platform.tls_secret
+      - name: cluster_type
+        type: string
+        description: The type of cluster (openshift or kubernetes)
+        default: ocp4
+        moduleRef:
+          id: cluster
+          output: platform.type_code
+      - name: olm_namespace
+        type: string
+        description: Namespace where olm is installed
+        moduleRef:
+          id: olm
+          output: olm_namespace
+      - name: operator_namespace
+        type: string
+        description: Namespace where operator will be installed
+        moduleRef:
+          id: olm
+          output: operator_namespace
+      - name: name
+        type: string
+        description: The name for the instance
+        default: argocd-cluster
+      - name: app_namespace
+        type: string
+        description: >-
+          The namespace where the ArgoCD instance will be deployed. If not
+          provided then will be installed in the default location
+          (openshift-gitops or gitops)
+        default: ''
+    version: v3.0.0
+    outputs:
+      - name: ingress_host
+        description: The ingress host for the Argo CD instance
+        sensitive: true
+      - name: ingress_url
+        description: The ingress url for the Argo CD instance
+        sensitive: true
+      - name: provision_tekton
+        description: Flag indicating that Tekton should be provisioned
+      - name: operator_namespace
+        description: The namespace where the operator has been provisioend
+      - name: namespace
+        description: The namespace where the ArgoCD instance has been provisioned
+      - name: service_account
+        description: >-
+          The name of the service account for the ArgoCD instance has been
+          provisioned
+      - name: username
+        description: The username of the default ArgoCD admin user
+      - name: password
+        description: The password of the default ArgoCD admin user
+        sensitive: true
+  - platforms:
+      - kubernetes
+      - ocp3
+      - ocp4
+    providers:
+      - name: clis
+        source: cloud-native-toolkit/clis
+    dependencies:
+      - id: cluster
+        interface: github.com/cloud-native-toolkit/automation-modules#cluster
+        refs: []
+      - id: olm
+        refs:
+          - source: github.com/ibm-garage-cloud/terraform-k8s-olm
             version: '>= 1.2.2'
       - id: namespace
         discriminator: openshift-gitops
