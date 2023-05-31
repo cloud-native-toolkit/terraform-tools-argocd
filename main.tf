@@ -191,10 +191,6 @@ resource null_resource argocd_instance_helm {
       }
       argocd-instance = {
         enabled = !local.openshift_cluster
-        ingress = {
-          host = var.ingress_subdomain != "" ? "${local.name}.${var.ingress_subdomain}" : ""
-          tls_secret = var.tls_secret_name
-        }
         argocd = {
           spec = {
             server = {
