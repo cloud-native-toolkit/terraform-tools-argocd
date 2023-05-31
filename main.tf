@@ -198,17 +198,17 @@ resource null_resource argocd_instance_helm {
         argocd = {
           spec = {
             server = {
-              host = "${local.name}-default.${var.ingress_subdomain}"
+              host = "${local.name}.${var.ingress_subdomain}"
               ingress = {
                 enabled = var.ingress_subdomain != ""
-                annotations = {
+                annotations = var.tls_secret_name != null && var.tls_secret_name != "" ? {
                   "nginx.ingress.kubernetes.io/backend-protocol" = "HTTPS"
                   "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
-                }
-                tls = [{
-                  hosts = ["${local.name}-default.${var.ingress_subdomain}"]
+                } : {}
+                tls = var.tls_secret_name != null && var.tls_secret_name != "" ? [{
+                  hosts = ["${local.name}.${var.ingress_subdomain}"]
                   secretName = var.tls_secret_name
-                }]
+                }] : []
               }
             }
           }
