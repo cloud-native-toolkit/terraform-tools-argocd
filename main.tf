@@ -201,6 +201,10 @@ resource null_resource argocd_instance_helm {
               host = "${local.name}-default.${var.ingress_subdomain}"
               ingress = {
                 enabled = var.ingress_subdomain != ""
+                tls = {
+                  hosts = ["${local.name}-default.${var.ingress_subdomain}"]
+                  secretName = var.tls_secret_name
+                }
               }
             }
           }
