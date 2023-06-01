@@ -42,3 +42,8 @@ variable "app_namespace" {
   description = "The namespace where the ArgoCD instance will be deployed. If not provided then will be installed in the default location (openshift-gitops or gitops)"
   default     = ""
 }
+
+variable "dummy" {
+  default   = "dummy"
+  sensitive = true
+}

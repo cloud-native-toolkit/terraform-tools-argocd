@@ -19,6 +19,7 @@ locals {
       clusterType = var.cluster_type
       olmNamespace = data.external.get_operator_config.result.catalogSourceNamespace
       operatorNamespace = local.operator_namespace
+      dummy = var.dummy
     }
     openshift-gitops = {
       enabled = true
@@ -188,6 +189,7 @@ resource null_resource argocd_instance_helm {
         enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
         createdBy = local.created_by
+        dummy = var.dummy
       }
       argocd-instance = {
         enabled = !local.openshift_cluster
