@@ -16,9 +16,10 @@ locals {
   disable_dex = !local.openshift_cluster
   argocd_values       = {
     global = {
-      clusterType = var.cluster_type
+      clusterType = data.external.cluster_info.result.clusterType
       olmNamespace = data.external.get_operator_config.result.catalogSourceNamespace
       operatorNamespace = local.operator_namespace
+      dummy = var.dummy
     }
     openshift-gitops = {
       enabled = true
@@ -49,6 +50,15 @@ locals {
 
 data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
+}
+
+data external cluster_info {
+  program = ["bash", "${path.module}/scripts/get-cluster-info.sh"]
+
+  query = {
+    bin_dir     = local.bin_dir
+    kube_config = var.cluster_config_file
+  }
 }
 
 data external get_operator_config {
@@ -89,7 +99,7 @@ resource null_resource argocd_operator_helm {
     namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file_content = yamlencode(local.argocd_values)
+    values_file_content = nonsensitive(yamlencode(local.argocd_values))
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
@@ -185,11 +195,12 @@ resource null_resource argocd_instance_helm {
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_instance.result.exists
-    values_file_content = yamlencode({
+    values_file_content = nonsensitive(yamlencode({
       openshift-gitops-instance = {
         enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
         createdBy = local.created_by
+        dummy = var.dummy
       }
       argocd-instance = {
         enabled = !local.openshift_cluster
@@ -212,7 +223,7 @@ resource null_resource argocd_instance_helm {
           }
         }
       }
-    })
+    }))
   }
 
   provisioner "local-exec" {

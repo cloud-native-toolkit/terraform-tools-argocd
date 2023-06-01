@@ -27,10 +27,6 @@ versions:
       moduleRef:
         id: cluster
         output: config_file_path
-    - name: cluster_type
-      moduleRef:
-        id: cluster
-        output: platform.type_code
     - name: ingress_subdomain
       moduleRef:
         id: cluster
@@ -47,3 +43,5 @@ versions:
       moduleRef:
         id: olm
         output: operator_namespace
+    - name: dummy
+      ignore: true
