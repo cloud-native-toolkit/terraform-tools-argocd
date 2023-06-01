@@ -7,6 +7,9 @@ if ! command -v kubectl 1> /dev/null 2> /dev/null; then
   exit 1
 fi
 
+echo "Waiting for 60 seconds for subscription to install"
+sleep 60
+
 count=0
 until kubectl get crd appprojects.argoproj.io 1> /dev/null 2> /dev/null || [[ $count -gt 20 ]]; do
   echo "Waiting for ArgoCD CRDs"

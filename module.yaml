@@ -47,3 +47,5 @@ versions:
       moduleRef:
         id: olm
         output: operator_namespace
+    - name: dummy
+      ignore: true
