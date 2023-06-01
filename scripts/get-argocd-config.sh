@@ -35,10 +35,11 @@ until kubectl get argocd -n "${NAMESPACE}" 1> /dev/null 2> /dev/null; do
   sleep 30
 done
 
-ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '.items[] | .metadata.name' | head -n 1)
+ARGOCD_NAME=$(kubectl get argocd -n "${NAMESPACE}" -o json | jq -r '[.items[] | .metadata.name][0] // empty')
 
 if [[ -z "${ARGOCD_NAME}" ]]; then
   echo "ArgoCD name not found in namespace ${NAMESPACE}" >&2
+  kubectl get argocd -n "${NAMESPACE}" -o json >&2
   exit 1
 fi
 
