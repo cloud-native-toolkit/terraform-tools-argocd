@@ -5,6 +5,7 @@
 Installs ArgoCD in the cluster via the operator. On OpenShift the module will also set up a route and
 enable OpenShift Auth. On Kubernetes, an ingress will be created.
 
+
 ## Software dependencies
 
 The module depends on the following software components:
