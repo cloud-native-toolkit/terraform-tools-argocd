@@ -40,16 +40,20 @@ if [[ $count -gt 20 ]]; then
   exit 1
 fi
 
-PACKAGE_MANIFEST=$(kubectl get packagemanifest -A -o json | jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]')
-kubectl get packagemanifest -A -o json | jq '[.items[] | select(.status.packageName == "openshift-gitops-operator" or .status.packageName == "argocd-operator") | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]' >&2
+export PACKAGE_NAMES='["openshift-gitops-operator","argocd-operator"]'
 
-OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c '.[] | select(.packageName == "openshift-gitops-operator")')
-if [[ -z "${OPERATOR_CONFIG}" ]]; then
-  OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c '.[] | select(.packageName == "argocd-operator")')
-fi
+PACKAGE_MANIFEST=$(kubectl get packagemanifest -A -o json | jq --argjson packages "$PACKAGE_NAMES" '[.items[] | select(any(.status.packageName ; contains($packages[]))) | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]')
+kubectl get packagemanifest -A -o json | jq --argjson packages "$PACKAGE_NAMES" '[.items[] | select(any(.status.packageName ; contains($packages[]))) | {"catalogSource":.status.catalogSource,"catalogSourceNamespace":.status.catalogSourceNamespace,"packageName":.status.packageName,"defaultChannel":.status.defaultChannel}]' >&2
+
+for name in $(echo "$PACKAGE_NAMES" | jq -r '.[]'); do
+  OPERATOR_CONFIG=$(echo "${PACKAGE_MANIFEST}" | jq -c --arg name "$name" '.[] | select(.packageName == $name)')
+  if [[ -n "${OPERATOR_CONFIG}" ]]; then
+    break
+  fi
+done
 
 if [[ -z "${OPERATOR_CONFIG}" ]]; then
-  echo "Unable to find ArgoCD operator" &>2
+  echo "Unable to find operator in list: $PACKAGE_NAMES" &>2
   exit 1
 fi
 

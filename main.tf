@@ -70,6 +70,8 @@ data external check_for_operator {
     name        = data.external.get_operator_config.result.packageName
     bin_dir     = local.bin_dir
     created_by  = local.created_by
+    crd         = "argocd"
+    title       = "ArgoCD"
   }
 }
 
@@ -87,7 +89,7 @@ resource null_resource argocd_operator_helm {
     namespace = local.operator_namespace
     name = "argocd"
     chart = "${path.module}/charts/argocd"
-    values_file_content = nonsensitive(yamlencode(local.argocd_values))
+    values_file_content = yamlencode(local.argocd_values)
     kubeconfig = var.cluster_config_file
     tmp_dir = local.tmp_dir
     bin_dir = local.bin_dir
@@ -183,7 +185,7 @@ resource null_resource argocd_instance_helm {
     bin_dir = local.bin_dir
     created_by = local.created_by
     skip = data.external.check_for_instance.result.exists
-    values_file_content = nonsensitive(yamlencode({
+    values_file_content = yamlencode({
       openshift-gitops-instance = {
         enabled = local.openshift_cluster
         disableDefaultInstance = local.disable_default_instance
@@ -210,7 +212,7 @@ resource null_resource argocd_instance_helm {
           }
         }
       }
-    }))
+    })
   }
 
   provisioner "local-exec" {

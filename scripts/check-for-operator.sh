@@ -22,6 +22,8 @@ export KUBECONFIG=$(echo "${INPUT}" | jq -r '.kube_config')
 NAMESPACE=$(echo "${INPUT}" | jq -r '.namespace')
 SUBSCRIPTION_NAME=$(echo "${INPUT}" | jq -r '.name')
 CREATED_BY=$(echo "${INPUT}" | jq -r '.created_by')
+CRD_NAME=$(echo "${INPUT}" | jq -r '.crd')
+TITLE=$(echo "${INPUT}" | jq -r '.title')
 
 
 ## check for Subscription
@@ -51,7 +53,7 @@ fi
 CSV=$(oc get csv -n "${SUBSCRIPTION_NAMESPACE}" "${CURRENT_CSV}" -o json | jq -r '.metadata.name // empty')
 
 ## check for CRD
-CRDS=$(oc get crd -o json | jq -r '.items[] | .metadata.name | select(. | test("argocds")) | .')
+CRDS=$(oc get crd -o json | jq -r --arg name "${CRD_NAME}" '.items[] | .metadata.name | select(. | test($name)) | .')
 
 ## check for operator deployment
 DEPLOYMENT_LABEL="olm.owner=${CSV}"
@@ -62,13 +64,13 @@ fi
 ## if subscription exists but CSV or CRDs not present or deployment not found then throw error
 if [[ -n "${SUBSCRIPTION}" ]]; then
   if [[ -z "${CSV}" ]]; then
-    echo "${CSV_NAME} not found in ${NAMESPACE} namespace" >&2
+    echo "${CURRENT_CSV} not found in ${NAMESPACE} namespace" >&2
     exit 1
   elif [[ -z "${CRDS}" ]]; then
-    echo "ArgoCD crds not found" >&2
+    echo "${TITLE} crds not found" >&2
     exit 1
   elif [[ -z "${DEPLOYMENT}" ]]; then
-    echo "ArgoCD deployment with label ${DEPLOYMENT_LABEL} not found" >&2
+    echo "${TITLE} deployment with label ${DEPLOYMENT_LABEL} not found" >&2
     exit 1
   fi
 
@@ -76,7 +78,7 @@ if [[ -n "${SUBSCRIPTION}" ]]; then
     jq -c '.status.conditions[] | select(.status == "True") | .message // empty')
 
   if [[ -n "${CONDITIONS}" ]]; then
-    echo "An OpenShift GitOps operator subscription already exists and it is not healthy" >&2
+    echo "An ${TITLE} operator subscription already exists and it is not healthy" >&2
     exit 1
   fi
 
@@ -91,7 +93,7 @@ if [[ -n "${SUBSCRIPTION}" ]]; then
     exit 0
   fi
 elif [[ -n "${CSV}" ]]; then
-  echo "The ArgoCD CSV is deployed but there is no subscription" >&2
+  echo "The ${TITLE} CSV is deployed but there is no subscription" >&2
   exit 1
 else
   echo '{"exists": "false"}'
