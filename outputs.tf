@@ -20,8 +20,14 @@ output "provision_tekton" {
 
 output "operator_namespace" {
   description = "The namespace where the operator has been provisioend"
-  value       = var.operator_namespace
+  value       = local.operator_namespace
   depends_on  = [null_resource.argocd_config]
+}
+
+output "operator_name" {
+  description = "The name of the operator subscription in the operator_namespace"
+  value       = data.external.get_operator_config.result.packageName
+  depends_on = [null_resource.argocd_config]
 }
 
 output "namespace" {
