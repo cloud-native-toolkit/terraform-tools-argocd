@@ -47,10 +47,10 @@ if [[ -z "${CURRENT_CSV}" ]]; then
   exit 1
 fi
 
-CSV_NAME_PATTERN=$(echo "${CURRENT_CSV}" | sed -E "s/[.]?v?[0-9][.][0-9][.][0-9]//g")
+CSV_NAME=$(echo "${CURRENT_CSV}" | sed -E "s/[.]?v?[0-9][.][0-9][.][0-9]//g")
 
 ## check for CSV
-CSV=$(oc get csv -n "${SUBSCRIPTION_NAMESPACE}" -o json | jq -r --arg NAME "${CSV_NAME_PATTERN}" '.items[] | select(.metadata.name | test($NAME)) | .metadata.name // empty')
+CSV=$(oc get csv -n "${SUBSCRIPTION_NAMESPACE}" -o json | jq -r --arg NAME "${CSV_NAME}" '.items[] | select(.metadata.name | test($NAME)) | .metadata.name // empty')
 
 ## check for CRD
 CRDS=$(oc get crd -o json | jq -r '.items[] | .metadata.name | select(. | test("argocds")) | .')
