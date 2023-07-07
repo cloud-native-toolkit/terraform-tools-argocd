@@ -19,7 +19,7 @@ output "provision_tekton" {
 }
 
 output "operator_namespace" {
-  description = "The namespace where the operator has been provisioend"
+  description = "The namespace where the operator has been provisioned"
   value       = local.operator_namespace
   depends_on  = [null_resource.argocd_config]
 }
