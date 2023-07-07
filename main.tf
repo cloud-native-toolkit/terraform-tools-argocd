@@ -244,8 +244,67 @@ resource null_resource argocd_instance_helm {
   }
 }
 
-resource null_resource wait_for_resources {
+resource null_resource argocd_permissions {
   depends_on = [null_resource.argocd_instance_helm]
+
+  triggers = {
+    namespace = local.operator_namespace
+    name = "${local.operator_namespace}-rbac"
+    chart = "rbac"
+    kubeconfig = var.cluster_config_file
+    tmp_dir = local.tmp_dir
+    bin_dir = local.bin_dir
+    created_by = local.created_by
+    skip = data.external.check_for_instance.result.exists
+    values_file_content = yamlencode({
+      rules = [{
+        apiGroups = ["*"]
+        resources = ["*"]
+        verbs = ["*"]
+      }]
+      serviceAccount = {
+        namespace = module.app_namespace.name
+      }
+    })
+    repo = "https://charts.cloudnativetoolkit.dev/"
+    version = "0.2.0"
+  }
+
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/deploy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
+      REPO = self.triggers.repo
+      VERSION = self.triggers.version
+    }
+  }
+
+  provisioner "local-exec" {
+    when = destroy
+
+    command = "${path.module}/scripts/destroy-helm.sh ${self.triggers.namespace} ${self.triggers.name} ${self.triggers.chart}"
+
+    environment = {
+      KUBECONFIG = self.triggers.kubeconfig
+      VALUES_FILE_CONTENT = self.triggers.values_file_content
+      TMP_DIR = self.triggers.tmp_dir
+      BIN_DIR = self.triggers.bin_dir
+      CREATED_BY = self.triggers.created_by
+      SKIP = self.triggers.skip
+      REPO = self.triggers.repo
+      VERSION = self.triggers.version
+    }
+  }
+}
+
+resource null_resource wait_for_resources {
+  depends_on = [null_resource.argocd_instance_helm, null_resource.argocd_permissions]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/wait-for-resources.sh ${module.app_namespace.name} 'app.kubernetes.io/part-of=argocd'"

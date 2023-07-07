@@ -33,6 +33,7 @@ echo "listing directory contents"
 ls -A
 
 NAMESPACE=$(cat .namespace)
+OPERATOR_NAMESPACE=$(cat .operator_namespace)
 
 ARGO_HOST=$(cat .argo-host)
 ARGO_USERNAME=$(cat .argo-username)
@@ -46,6 +47,10 @@ fi
 if [[ -z "${NAME}" ]]; then
   NAME=$(echo "${NAMESPACE}" | sed "s/tools-//")
 fi
+
+echo "RBAC resources in operator namespace: ${OPERATOR_NAMESPACE}"
+
+kubectl get role,rolebinding -n "${OPERATOR_NAMESPACE}"
 
 echo "Verifying resources in ${NAMESPACE} namespace for module ${NAME}"
 
