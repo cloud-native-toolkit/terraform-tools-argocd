@@ -303,8 +303,14 @@ resource null_resource argocd_permissions {
   }
 }
 
+resource null_resource manage_operator_namespace {
+  provisioner "local-exec" {
+    command = "${path.module}/scripts/argocd-manage-namespace.sh '${local.operator_namespace}' '${local.app_namespace}'"
+  }
+}
+
 resource null_resource wait_for_resources {
-  depends_on = [null_resource.argocd_instance_helm, null_resource.argocd_permissions]
+  depends_on = [null_resource.argocd_instance_helm, null_resource.argocd_permissions, null_resource.manage_operator_namespace]
 
   provisioner "local-exec" {
     command = "${path.module}/scripts/wait-for-resources.sh ${module.app_namespace.name} 'app.kubernetes.io/part-of=argocd'"
