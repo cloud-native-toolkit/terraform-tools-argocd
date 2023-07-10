@@ -3,7 +3,7 @@
 TARGET="$1"
 ARGOCD_NAMESPACE="$2"
 
-if [[ -z "${TARGET}" ]] || [[ -n "${ARGOCD_NAMESPACE}" ]]; then
+if [[ -z "${TARGET}" ]] || [[ -z "${ARGOCD_NAMESPACE}" ]]; then
   echo "usage: argocd-manage-namespace.sh {TARGET} {ARGOCD_NAMESPACE}" >&2
   exit 1
 fi
