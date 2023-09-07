@@ -15,12 +15,6 @@ variable "tls_secret_name" {
   default     = ""
 }
 
-variable "cluster_type" {
-  type        = string
-  description = "The type of cluster (openshift or kubernetes)"
-  default     = "ocp4"
-}
-
 variable "olm_namespace" {
   type        = string
   description = "Namespace where olm is installed"

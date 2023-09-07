@@ -16,7 +16,7 @@ locals {
   disable_dex = !local.openshift_cluster
   argocd_values       = {
     global = {
-      clusterType = var.cluster_type
+      clusterType = data.external.cluster_info.result.clusterType
       olmNamespace = data.external.get_operator_config.result.catalogSourceNamespace
       operatorNamespace = local.operator_namespace
       dummy = var.dummy
@@ -52,6 +52,15 @@ data clis_check clis {
   clis = ["helm", "jq", "oc", "kubectl"]
 }
 
+data external cluster_info {
+  program = ["bash", "${path.module}/scripts/get-cluster-info.sh"]
+
+  query = {
+    bin_dir     = local.bin_dir
+    kube_config = var.cluster_config_file
+  }
+}
+
 data external get_operator_config {
   program = ["bash", "${path.module}/scripts/get-operator-config.sh"]
 
@@ -71,6 +80,8 @@ data external check_for_operator {
     name        = data.external.get_operator_config.result.packageName
     bin_dir     = local.bin_dir
     created_by  = local.created_by
+    crd         = "argocd"
+    title       = "ArgoCD"
   }
 }
 
